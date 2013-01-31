@@ -23,16 +23,11 @@ public class Driver {
 	public static void main(String[] args) {
 		ProjectActorFactory actorFactory = new ProjectActorFactory();
 		int n = 4;
-		Set<ActorRef> allActors = new HashSet<ActorRef>();
 		
 		ActorRef systemActor = Actors.actorOf(SystemActor.class);
 		ActorRef jailActor = Actors.actorOf(JailActor.class);
 		ActorRef documentCheckActor = Actors.actorOf(DocumentCheckActor.class);
-		
-		allActors.add(systemActor.start());
-		allActors.add(jailActor.start());
-		allActors.add(documentCheckActor.start());
-		
+				
 		List<List<ActorRef>> lineActors = new ArrayList<List<ActorRef>>();
 		
 		for(int i=0; i<n; i++) {
@@ -50,9 +45,9 @@ public class Driver {
 			lineActors.add(insideLineActors);
 		}
 		
-		Register register = new Register(systemActor, jailActor, documentCheckActor, lineActors);
+		Register register = new Register(systemActor.start(), jailActor.start(), documentCheckActor.start(), lineActors);
 		
-		systemActor.tell(new StartSystem(register));
+		systemActor.tell(register);
 	}
 
 }
