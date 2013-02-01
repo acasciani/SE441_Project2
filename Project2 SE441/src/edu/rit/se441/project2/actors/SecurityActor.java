@@ -45,27 +45,37 @@ public class SecurityActor extends UntypedActor {
 		}
 	}
 	
-	
-	
-	private void messageReceived(BagCheckReport bagCheckReport) {
-		logger.debug("Received BagCheckReport message from BagCheck");
-		
+
+	// Helper methods to hand off when messages are received
+	private void messageReceived(BagCheckReport bagCheckReport) {	
 		if(!childrenAreRegistered()) {
-			//TODO
+			logger.error(Consts.ERROR_MSG_CHLD_NOT_REG.value(), "Jail");
 			return;
 		}
 
-		if(!doesBaggageExist(bagCheckReport.getbaggage())) {
-			boolean allSet = bagHasArrived(bagCheckReport.getbaggage(), bagCheckReport.didPass());
+		Baggage baggage = bagCheckReport.getbaggage();
+		Passenger passenger = baggage.whoDoesThisBaggageBelongTo();
+		
+		if(!doesBaggageExist(baggage)) {
+			logger.debug("Adding baggage [%s] to HashMap.", baggage.toString());
+			
+			boolean allSet = bagHasArrived(baggage, bagCheckReport.didPass());
 			
 			if(allSet) {
-				boolean goToJailAnswer = mapping.get(bagCheckReport.getbaggage().whoDoesThisBaggageBelongTo()).get(BAGGAGE);
+				logger.debug("Baggage [%s] and Passenger [%s] have arrived at Security.", baggage.toString(), passenger.toString());
+				
+				boolean goToJailAnswer = mapping.get(passenger).get(BAGGAGE);
+				
 				if(goToJailAnswer) {
-					//tell person to go to jail
+					logger.debug("Either Baggage [%s] or Passenger [%s] didn't pass. Going to Jail.", baggage.toString(), passenger.toString());
 				} else {
-					// exit system
+					logger.debug("Both Baggage [%s] and Passenger [%s] passed. Leaving system.", baggage.toString(), passenger.toString());
 				}
+			} else {
+				logger.debug("Baggage [%s] has been added to the HashMap but Passenger [%s] has not (arrived) yet.", baggage.toString(), passenger.toString());
 			}
+		} else {
+			logger.debug("Baggage [%s] was already in HashMap.", baggage.toString());
 		}
 	}
 	

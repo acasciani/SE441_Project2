@@ -4,7 +4,11 @@ public enum Consts {
 	LOGGER_DEBUG_ERR_OFF		("DEBUG [%s]: %s %n"),
 	LOGGER_DEBUG_ERR_ON			("DEBUG [%s]: %s %n"),
 	LOGGER_ERROR				("ERROR [%s]: %s %n"),
-	DEBUG_MSG_RECEIVED			("%s message received from %s");
+	DEBUG_MSG_RECEIVED			("%s message received from %s"),
+	ERROR_MSG_CHLD_NOT_REG		("My children [%s] are not registered");
+	
+	
+	
 	
 	
 	
