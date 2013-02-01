@@ -41,7 +41,7 @@ public class LineActor extends UntypedActor {
 	private void messageReceived(Register register) {
 		log("Received Register message from subordinates");
 		
-		if(!childrenAreRegistered()) {
+		if(childrenAreRegistered()) {
 			//TODO what should we do here?
 			return;
 		}
@@ -91,7 +91,7 @@ public class LineActor extends UntypedActor {
 		log("Adding Passenger{%s} to my queue so he can wait for body scanner", passenger.toString());
 		log("Sending Baggage{%s} to bag check", passenger.getBaggage().toString());
 		
-		GoToBagCheck goToBagCheck = new GoToBagCheck(passenger.getBaggage(), passenger);
+		GoToBagCheck goToBagCheck = new GoToBagCheck(passenger.getBaggage());
 		CanISendYouAPassenger canISendPassenger = new CanISendYouAPassenger(getContext());
 		
 		queue.add(goToLine.getPassenger()); // 2.d.
