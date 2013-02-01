@@ -17,13 +17,12 @@ public class Register {
 			final ActorRef systemActor, 
 			final ActorRef jailActor, 
 			final ActorRef documentCheckActor,
-			final List<List<ActorRef>> lineActors,
-			final int numLines){
+			final List<List<ActorRef>> lineActors){
 		
 		this.systemActor = systemActor;
 		this.jailActor = jailActor;
 		this.documentCheckActor = documentCheckActor;
-		this.numLines = numLines;
+		this.numLines = lineActors.size();
 		
 		// The following guarantees this is ALWAYS immutable.
 		List<List<ActorRef>> newList = new ArrayList<List<ActorRef>>();
