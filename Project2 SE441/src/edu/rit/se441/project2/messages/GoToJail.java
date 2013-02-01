@@ -1,5 +1,15 @@
 package edu.rit.se441.project2.messages;
 
-public class GoToJail {
+import edu.rit.se441.project2.nonactors.Passenger;
 
+public class GoToJail {
+	private final Passenger pass;
+	
+	public GoToJail(Passenger passenger){
+		this.pass = passenger;
+	}
+
+	public Passenger getPassenger(){
+		return pass;
+	}
 }
