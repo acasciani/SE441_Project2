@@ -1,6 +1,6 @@
 package edu.rit.se441.project2.messages;
 
-import edu.rit.se441.project2.nonactors.Passenger;
+import edu.rit.se441.project2.nonactors.Baggage;
 
 /**
  * BagCheckReport.java
@@ -10,18 +10,18 @@ import edu.rit.se441.project2.nonactors.Passenger;
  */
 public class BagCheckReport {
 	private final boolean passed;
-	private final Passenger passenger;
+	private final Baggage baggage;
 	
-	public BagCheckReport(final Passenger passenger, final boolean passed) {
+	public BagCheckReport(final Baggage baggage, final boolean passed) {
 		this.passed = passed;
-		this.passenger = passenger;
+		this.baggage = baggage;
 	}
 	
 	public boolean didPass() {
 		return passed;
 	}
 	
-	public Passenger getPassenger() {
-		return passenger;
+	public Baggage getbaggage() {
+		return baggage;
 	}
 }
