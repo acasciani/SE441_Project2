@@ -12,14 +12,14 @@ public class Logger {
 	public void debug(String message, String... args) {
 		if(debugEnabled) {
 			if(debugAsErr) {
-				System.err.printf("DEBUG [%s]: %s %n", clazz.getCanonicalName(), args);
+				System.err.printf(Consts.LOGGER_DEBUG_ERR_ON.value(), clazz.getCanonicalName(), args);
 			} else { 
-				System.out.printf("DEBUG [%s]: %s %n", clazz.getCanonicalName(), args);
+				System.out.printf(Consts.LOGGER_DEBUG_ERR_OFF.value(), clazz.getCanonicalName(), args);
 			}
 		}
 	}
 	
 	public void error(String message, String... args) {
-		System.out.printf("ERROR [%s]: %s %n", clazz.getCanonicalName(), args);
+		System.out.printf(Consts.LOGGER_ERROR.value(), clazz.getCanonicalName(), args);
 	}
 }

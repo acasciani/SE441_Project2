@@ -8,6 +8,7 @@ import edu.rit.se441.project2.messages.BagCheckReport;
 import edu.rit.se441.project2.messages.BodyCheckReport;
 import edu.rit.se441.project2.messages.Register;
 import edu.rit.se441.project2.nonactors.Baggage;
+import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Logger;
 import edu.rit.se441.project2.nonactors.Passenger;
 
@@ -28,15 +29,20 @@ public class SecurityActor extends UntypedActor {
 	
 	@Override
 	public void onReceive(Object message) throws Exception {
+		String msgReceived = Consts.DEBUG_MSG_RECEIVED.value();
 		if(message instanceof Register) {
+			logger.debug(msgReceived, "Register", "Jail");
 			messageReceived((Register) message);
+			
 		} else if(message instanceof BagCheckReport) {
+			logger.debug(msgReceived, "BagCheckReport", "BagCheck");
 			messageReceived((BagCheckReport) message);
+			
 		} else if(message instanceof BodyCheckReport) {
+			logger.debug(msgReceived, "BodyCheckReport", "BodyCheck");
 			messageReceived((BodyCheckReport) message);
+			
 		}
-		
-		
 	}
 	
 	
@@ -140,10 +146,7 @@ public class SecurityActor extends UntypedActor {
 		return mapping.containsKey(passenger) &&
 				mapping.get(passenger).get(BAGGAGE) != null;
 	}
-	
-	/**
-	 * This may be worth to do before something like a Passenger is sent!
-	 */
+
 	private boolean childrenAreRegistered() {
 		return (jailActor != null);
 	}
