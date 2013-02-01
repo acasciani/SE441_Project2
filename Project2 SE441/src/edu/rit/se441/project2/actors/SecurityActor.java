@@ -8,9 +8,11 @@ import edu.rit.se441.project2.messages.BagCheckReport;
 import edu.rit.se441.project2.messages.BodyCheckReport;
 import edu.rit.se441.project2.messages.Register;
 import edu.rit.se441.project2.nonactors.Baggage;
+import edu.rit.se441.project2.nonactors.Logger;
 import edu.rit.se441.project2.nonactors.Passenger;
 
 public class SecurityActor extends UntypedActor {
+	private static final Logger logger = new Logger(SecurityActor.class);
 	private static final String PASSENGER = "Passenger";
 	private static final String BAGGAGE   = "Baggage";
 	private final int lineNumber;
@@ -40,7 +42,7 @@ public class SecurityActor extends UntypedActor {
 	
 	
 	private void messageReceived(BagCheckReport bagCheckReport) {
-		log("Received BagCheckReport message from BagCheck");
+		logger.debug("Received BagCheckReport message from BagCheck");
 		
 		if(!childrenAreRegistered()) {
 			//TODO
@@ -62,7 +64,7 @@ public class SecurityActor extends UntypedActor {
 	}
 	
 	private void messageReceived(BodyCheckReport bodyCheckReport) {
-		log("Received BodyCheckReport message from BodyCheck");
+		logger.debug("Received BodyCheckReport message from BodyCheck");
 		
 		if(!childrenAreRegistered()) {
 			//TODO
@@ -85,7 +87,7 @@ public class SecurityActor extends UntypedActor {
 	}
 	
 	private void messageReceived(Register register) {
-		log("Received Register message from subordinates");
+		logger.debug("Received Register message from subordinates");
 		
 		if(childrenAreRegistered()) {
 			return;
@@ -145,10 +147,6 @@ public class SecurityActor extends UntypedActor {
 	private boolean childrenAreRegistered() {
 		return (jailActor != null);
 	}
-	
-	private void log(String message, String... args) {
-		String className = this.getClass().getCanonicalName();
-		System.err.printf("LOG[%s]: %s %n", className, args);
-	}
+
 	
 }

@@ -8,9 +8,11 @@ import edu.rit.se441.project2.messages.BagCheckReport;
 import edu.rit.se441.project2.messages.GoToBagCheck;
 import edu.rit.se441.project2.messages.Register;
 import edu.rit.se441.project2.nonactors.Baggage;
+import edu.rit.se441.project2.nonactors.Logger;
 import edu.rit.se441.project2.nonactors.Passenger;
 
 public class BagCheckActor extends UntypedActor {
+	private static final Logger logger = new Logger(BagCheckActor.class);
 	private final int lineNumber;
 	//private final ConcurrentLinkedQueue<Baggage> queue;
 	private ActorRef securityActor;
@@ -33,10 +35,10 @@ public class BagCheckActor extends UntypedActor {
 	
 	
 	private void messageReceived(GoToBagCheck goToBagCheck) {
-		log("Received GoToBagCheck message from Line");
+		logger.debug("Received GoToBagCheck message from Line");
 		
 		if(!childrenAreRegistered()) {
-			log("My dependencies aren't registered yet!");
+			logger.error("My dependencies aren't registered yet!");
 			//TODO what should we do here?
 			return;
 		}
@@ -52,7 +54,7 @@ public class BagCheckActor extends UntypedActor {
 	}
 	
 	private void messageReceived(Register register) {
-		log("Received Register message from subordinate");
+		logger.debug("Received Register message from subordinate");
 		
 		if(childrenAreRegistered()) {
 			//TODO what should we do here?
@@ -75,10 +77,6 @@ public class BagCheckActor extends UntypedActor {
 	private boolean childrenAreRegistered() {
 		return (securityActor != null);
 	}
-	
-	private void log(String message, String... args) {
-		String className = this.getClass().getCanonicalName();
-		System.err.printf("LOG[%s]: %s %n", className, args);
-	}
+
 
 }

@@ -10,9 +10,11 @@ import edu.rit.se441.project2.messages.GoToBagCheck;
 import edu.rit.se441.project2.messages.GoToBodyCheck;
 import edu.rit.se441.project2.messages.GoToLine;
 import edu.rit.se441.project2.messages.Register;
+import edu.rit.se441.project2.nonactors.Logger;
 import edu.rit.se441.project2.nonactors.Passenger;
 
 public class LineActor extends UntypedActor {
+	private static final Logger logger = new Logger(LineActor.class);
 	private final int lineNumber;
 	private final ConcurrentLinkedQueue<Passenger> queue;
 	private ActorRef bagCheckActor;
@@ -39,7 +41,7 @@ public class LineActor extends UntypedActor {
 	
 	
 	private void messageReceived(Register register) {
-		log("Received Register message from subordinates");
+		logger.debug("Received Register message from subordinates");
 		
 		if(childrenAreRegistered()) {
 			//TODO what should we do here?
@@ -55,19 +57,19 @@ public class LineActor extends UntypedActor {
 	
 
 	private void messageReceived(BodyCheckRequestsNext bagCheckNext) {
-		log("Received BodyCheckRequestsNext message from BagCheck");
+		logger.debug("Received BodyCheckRequestsNext message from BagCheck");
 		
 		if(!childrenAreRegistered()) {
-			log("My children/dependencies are not registered!");
+			logger.error("My children/dependencies are not registered!");
 			//TODO what should we do here?
 			return;
 		} else if(queue.isEmpty()) {
-			log("There is no one in the queue to send to BodyCheck");
+			logger.debug("There is no one in the queue to send to BodyCheck");
 			return;
 		}
 		
 		Passenger passenger = queue.poll();
-		log("Sending Passenger{%s} to BodyCheck", passenger.toString());
+		logger.debug("Sending Passenger{%s} to BodyCheck", passenger.toString());
 		
 		GoToBodyCheck goToBodyCheck = new GoToBodyCheck(passenger);
 		bodyCheckActor.tell(goToBodyCheck);
@@ -75,11 +77,11 @@ public class LineActor extends UntypedActor {
 	
 	
 	private void messageReceived(GoToLine goToLine) {
-		log("Received GoToLine message from DocumentCheck");
+		logger.debug("Received GoToLine message from DocumentCheck");
 		
 		if(!childrenAreRegistered()) {
 			//TODO what should we do here?
-			log("The children (dependencies) are not registered");
+			logger.error("The children (dependencies) are not registered");
 			return;
 		}
 		
@@ -88,8 +90,8 @@ public class LineActor extends UntypedActor {
 		// Per Reqt 2
 		// d. Passengers can go to the body scanner only when it is ready
 		// e. Passengers place their baggage in the baggage scanner as soon as they enter a queue
-		log("Adding Passenger{%s} to my queue so he can wait for body scanner", passenger.toString());
-		log("Sending Baggage{%s} to bag check", passenger.getBaggage().toString());
+		logger.debug("Adding Passenger{%s} to my queue so he can wait for body scanner", passenger.toString());
+		logger.debug("Sending Baggage{%s} to bag check", passenger.getBaggage().toString());
 		
 		GoToBagCheck goToBagCheck = new GoToBagCheck(passenger.getBaggage());
 		CanISendYouAPassenger canISendPassenger = new CanISendYouAPassenger(getContext());
@@ -106,11 +108,6 @@ public class LineActor extends UntypedActor {
 	 */
 	private boolean childrenAreRegistered() {
 		return (bagCheckActor != null) && (bodyCheckActor != null) && (securityActor != null);
-	}
-	
-	private void log(String message, String... args) {
-		String className = this.getClass().getCanonicalName();
-		System.err.printf("LOG[%s]: %s %n", className, args);
 	}
 	
 }
