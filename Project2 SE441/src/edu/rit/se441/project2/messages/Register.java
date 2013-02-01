@@ -11,15 +11,19 @@ public class Register {
 	private final ActorRef jailActor;
 	private final ActorRef documentCheckActor;
 	private final List<List<ActorRef>> lineActors;
+	private final int numLines;
 	
 	public Register(
 			final ActorRef systemActor, 
 			final ActorRef jailActor, 
 			final ActorRef documentCheckActor,
-			final List<List<ActorRef>> lineActors) {
+			final List<List<ActorRef>> lineActors,
+			final int numLines){
+		
 		this.systemActor = systemActor;
 		this.jailActor = jailActor;
 		this.documentCheckActor = documentCheckActor;
+		this.numLines = numLines;
 		
 		// The following guarantees this is ALWAYS immutable.
 		List<List<ActorRef>> newList = new ArrayList<List<ActorRef>>();
@@ -56,5 +60,9 @@ public class Register {
 	
 	public ActorRef getSecurityActor(final int lineNumber) {
 		return lineActors.get(lineNumber).get(3);
+	}
+	
+	public int getNumberOfLines(){
+		return numLines;
 	}
 }
