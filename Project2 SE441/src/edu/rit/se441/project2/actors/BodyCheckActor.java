@@ -5,14 +5,17 @@ import java.util.Random;
 import edu.rit.se441.project2.messages.BodyCheckReport;
 import edu.rit.se441.project2.messages.BodyCheckRequestsNext;
 import edu.rit.se441.project2.messages.CanISendYouAPassenger;
+import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.GoToBodyCheck;
 import edu.rit.se441.project2.messages.GoToJail;
 import edu.rit.se441.project2.messages.Register;
+import edu.rit.se441.project2.nonactors.Logger;
 import edu.rit.se441.project2.nonactors.Passenger;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 
 public class BodyCheckActor extends UntypedActor {
+	private static final Logger logger = new Logger(BodyCheckActor.class);
 	private final int lineNumber;
 	private ActorRef mySecurity = null; // set after the register message
 	private boolean isAcceptingPassengers = true; // set and reset during the
@@ -24,8 +27,19 @@ public class BodyCheckActor extends UntypedActor {
 
 	@Override
 	public void onReceive(Object arg0) throws Exception {
+		
+		
 		// initialization message
 		if (arg0 instanceof Register) {
+			logger.debug("Received Register message from subordinate");
+			
+			if(childrenAreRegistered()) {
+				logger.error("My dependencies aren't registered yet!");
+				//TODO what should we do here?
+				//returning is fine
+				return;
+			}
+
 			Register myReg = (Register) arg0;
 			mySecurity = myReg.getSecurityActor(this.lineNumber);
 		}
@@ -34,6 +48,7 @@ public class BodyCheckActor extends UntypedActor {
 		 * Message From Line
 		 */
 		if (arg0 instanceof GoToBodyCheck) {
+			logger.debug("Received GoToBodyCheck message from Line");
 			this.isAcceptingPassengers = false;
 			
 			//critical problem area below
@@ -46,6 +61,7 @@ public class BodyCheckActor extends UntypedActor {
 		 * Message From Line
 		 */
 		if (arg0 instanceof CanISendYouAPassenger) {
+			logger.debug("Received CanISendYouAPassenger message from Line");
 			if (this.isAcceptingPassengers) {
 				CanISendYouAPassenger cISYAP = (CanISendYouAPassenger) arg0;
 				ActorRef myLine = cISYAP.getLineActor();
@@ -55,6 +71,19 @@ public class BodyCheckActor extends UntypedActor {
 			}
 		}
 
+		
+		if (arg0 instanceof EndOfDay) {
+			logger.debug("Received EndOfDay message from Line");
+			//TODO what to do here?
+			shutDown();
+			
+		}
+	}
+
+
+	private void shutDown() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	//Function takes a passenger and messages Security whether it passes or fails
@@ -72,6 +101,13 @@ public class BodyCheckActor extends UntypedActor {
 		this.mySecurity.tell(myBodyReport);
 		this.isAcceptingPassengers = true;
 
+	}
+	
+	/**
+	 * This may be worth to do before something like a Passenger is sent!
+	 */
+	private boolean childrenAreRegistered() {
+		return (mySecurity != null);
 	}
 
 }
