@@ -16,7 +16,7 @@ public class DocumentCheckActor extends UntypedActor {
 	@Override
 	public void onReceive(Object arg0) throws Exception {
 		
-		//TODO HOW DO LINES INDIVIDUALLY REGISTER WITH DOC CHECK
+		//TODO HOW DO LINES INDIVIDUALLY REGISTER WITH DOCUMENT CHECK
 		
 		// initialization message 
 		if (arg0 instanceof Register){
