@@ -53,7 +53,7 @@ public class BodyCheckActor extends UntypedActor {
 			myLine = init.getLineActor(lineNumber);
 
 			logger.debug(Consts.DEBUG_MSG_REG_MY_CHILD, MY_PARENT);
-			myLine.tell(new Register(1));
+			myLine.tell(new Register(0));
 		}
 
 		/*
