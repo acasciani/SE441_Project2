@@ -1,7 +1,11 @@
+/**
+ * SystemActor is an actor class which 
+ */
 package edu.rit.se441.project2.actors;
 
 import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.Initialize;
+import edu.rit.se441.project2.messages.Register;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 
@@ -28,6 +32,11 @@ public class SystemActor extends UntypedActor {
 		else if (arg0 instanceof EndOfDay){
 			// pass the message on to docCheck
 			docCheck.tell(arg0);
+		}
+	
+		else if (arg0 instanceof Register){
+			// start generating passengers somehow
+			// TODO Passenger generation
 		}
 	}
 
