@@ -16,16 +16,17 @@ public class DocumentCheckActor extends UntypedActor {
 	int currLine = 0;
 	ArrayList<ActorRef> lineList = new ArrayList<ActorRef>();
 	boolean[] lineStatus;
+	boolean linesReady = false;
+	ActorRef system;
 	
 	@Override
 	public void onReceive(Object arg0) throws Exception {
-		
-		//TODO HOW DO LINES INDIVIDUALLY REGISTER WITH DOCUMENT CHECK
 		
 		// initialization message 
 		if (arg0 instanceof Initialize){
 			Initialize init = (Initialize) arg0;
 			numLines = init.getNumberOfLines();
+			
 			// create a list of the lines
 			for (int x = 0; x < numLines; x++){
 				lineList.add(init.getLineActor(x));
@@ -33,6 +34,9 @@ public class DocumentCheckActor extends UntypedActor {
 			
 			// create a status list for the lines
 			lineStatus = new boolean[numLines];
+			
+			// remember the system actor reference
+			system = init.getSystemActor();
 		}
 		
 		// line register message
@@ -40,6 +44,17 @@ public class DocumentCheckActor extends UntypedActor {
 			Register reg = (Register) arg0;
 			int sender = reg.getSender();
 			lineStatus[sender] = true;
+			
+			// are all lines ready?
+			for (int x = 0; x < numLines; x++){
+				if (!lineStatus[x]){
+					break;
+				}
+				
+				// if so, flip the switch and register with systemActor
+				linesReady = true;
+				register();
+			}
 		}
 		
 		// end of day message
@@ -55,7 +70,7 @@ public class DocumentCheckActor extends UntypedActor {
 			numLines = 0;
 		}
 		
-		// receive new passenger TODO MAKE A DIFFERENT MESSAGE FOR THIS
+		// receive new passenger
 		if (arg0 instanceof NewPassenger){
 			NewPassenger msg = (NewPassenger) arg0;
 			Passenger pass = msg.getPassenger();
@@ -67,26 +82,17 @@ public class DocumentCheckActor extends UntypedActor {
 	private void sendPassenger(Passenger pass){
 		boolean atLeastOneLineOpen = false;
 		
-		// make sure at least one line is functioning
+		// make sure at the lines are functioning
 		for (int x = 0; x < numLines; x++){
 			if (lineStatus[currLine]){
 				atLeastOneLineOpen = true;
 			}
 		}
 		
-		// if not, the passenger fails to send. tell the console
+		// if not, the passenger fails to send. tell the console.
 		if (!atLeastOneLineOpen){
 			System.err.println("FAILED TO SEND A PASSENGER TO LINE, AS NO LINES ARE CURRENTLY OPEN!");
 			return;
-		}
-		
-		// choose the next available functioning line
-		while (!lineStatus[currLine]){
-			if (currLine == (numLines - 1)){
-				currLine = 0;
-			} else {
-				currLine++;
-			}
 		}
 		
 		// send the passenger
@@ -101,4 +107,7 @@ public class DocumentCheckActor extends UntypedActor {
 		}
 	}
 
+	private void register(){
+		system.tell(new Register(0));
+	}
 }

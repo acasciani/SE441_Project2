@@ -7,7 +7,7 @@ import edu.rit.se441.project2.messages.BodyCheckRequestsNext;
 import edu.rit.se441.project2.messages.CanISendYouAPassenger;
 import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.GoToBodyCheck;
-import edu.rit.se441.project2.messages.GoToJail;
+import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.messages.Register;
 import edu.rit.se441.project2.nonactors.Logger;
 import edu.rit.se441.project2.nonactors.Passenger;
@@ -17,7 +17,8 @@ import akka.actor.UntypedActor;
 public class BodyCheckActor extends UntypedActor {
 	private static final Logger logger = new Logger(BodyCheckActor.class);
 	private final int lineNumber;
-	private ActorRef mySecurity = null; // set after the register message
+	private ActorRef myLine = null; //set after the init message
+	private ActorRef mySecurity = null; // set after the init message
 	private boolean isAcceptingPassengers = true; // set and reset during the
 													// simulation
 
@@ -30,7 +31,7 @@ public class BodyCheckActor extends UntypedActor {
 		
 		
 		// initialization message
-		if (arg0 instanceof Register) {
+		if (arg0 instanceof Initialize) {
 			logger.debug("Received Register message from subordinate");
 			
 			if(childrenAreRegistered()) {
@@ -40,8 +41,11 @@ public class BodyCheckActor extends UntypedActor {
 				return;
 			}
 
-			Register myReg = (Register) arg0;
-			mySecurity = myReg.getSecurityActor(this.lineNumber);
+			Initialize init = (Initialize) arg0;
+			mySecurity = init.getSecurityActor(this.lineNumber);
+			myLine = init.getLineActor(lineNumber);
+			
+			myLine.tell(new Register(1));
 		}
 
 		/*

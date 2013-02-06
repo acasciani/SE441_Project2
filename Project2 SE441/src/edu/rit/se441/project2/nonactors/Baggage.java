@@ -22,4 +22,9 @@ public class Baggage {
 	public Passenger whoDoesThisBaggageBelongTo() {
 		return whoBelongsTo;
 	}
+	
+	@Override
+	public String toString() {
+		return whoBelongsTo.toString() + "'s " + Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE;
+	}
 }
