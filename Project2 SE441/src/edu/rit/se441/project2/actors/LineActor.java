@@ -9,6 +9,7 @@ import edu.rit.se441.project2.messages.CanISendYouAPassenger;
 import edu.rit.se441.project2.messages.GoToBagCheck;
 import edu.rit.se441.project2.messages.GoToBodyCheck;
 import edu.rit.se441.project2.messages.GoToLine;
+import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.messages.Register;
 import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Logger;
@@ -45,6 +46,9 @@ public class LineActor extends UntypedActor {
 	private final ConcurrentLinkedQueue<Passenger> queue;
 	private ActorRef bagCheckActor;
 	private ActorRef bodyCheckActor;
+	private boolean bagCheckRegistered = false;
+	private boolean bodyCheckRegistered = false;
+	private ActorRef docCheckActor;
 	
 	public LineActor(final int lineNumber) {
 		logger.debug(Consts.DEBUG_MSG_INSTAT_ACTOR, Consts.NAME_ACTORS_LINE, Consts.NAME_OTHER_OBJECTS_DRIVER);
@@ -60,6 +64,10 @@ public class LineActor extends UntypedActor {
 			logger.debug(msgReceived, Consts.NAME_MESSAGES_REGISTER, MY_CHLDRN);
 			messageReceived((Register) message);
 			
+		} else if(message instanceof Initialize) {
+			logger.debug(msgReceived, Consts.NAME_MESSAGES_INIT, MY_CHLDRN);
+			messageReceived((Initialize) message);
+			
 		} else if(message instanceof GoToLine) {
 			logger.debug(msgReceived, Consts.NAME_MESSAGES_GO_TO_LINE, Consts.NAME_ACTORS_DOCUMENT_CHECK);
 			messageReceived((GoToLine) message);
@@ -73,9 +81,21 @@ public class LineActor extends UntypedActor {
 	
 	
 	// Helper methods to hand off when messages are received
-	private void messageReceived(Register register) {		
-		if(childrenAreRegistered()) {
+	private void messageReceived(Register register) {
+		// body check= 0; bag check=1
+		Consts[] children = {Consts.NAME_ACTORS_BODY_CHECK, Consts.NAME_ACTORS_BAG_CHECK};
+		
+		if(bagCheckRegistered && bodyCheckRegistered) {
 			logger.error(Consts.DEBUG_MSG_CHLD_ALR_REG, MY_CHLDRN);
+			return;
+		} else if(bagCheckRegistered && register.getSender() == 1) {
+			logger.error(Consts.DEBUG_MSG_CHLD_ALR_REG, children[1]);
+			return;
+		} else if(bodyCheckRegistered && register.getSender() == 0) {
+			logger.error(Consts.DEBUG_MSG_CHLD_ALR_REG, children[0]);
+			return;
+		} else if(register.getSender() != 0 && register.getSender() != 1) {
+			logger.error("The sender{%s} is unknown", register.getSender());
 			return;
 		}
 		
@@ -83,13 +103,29 @@ public class LineActor extends UntypedActor {
 		Consts docChkLbl = Consts.NAME_ACTORS_DOCUMENT_CHECK;
 		Consts lineLbl = Consts.NAME_ACTORS_LINE;
 		
-		logger.debug(Consts.DEBUG_MSG_REG_MY_CHILD, MY_CHLDRN);
-		bagCheckActor = register.getBagCheckActor(lineNumber);
-		bodyCheckActor = register.getBodyCheckActor(lineNumber);
+		logger.debug(Consts.DEBUG_MSG_REG_MY_CHILD, children[register.getSender()]);
+		if(register.getSender() == 0) {
+			bodyCheckRegistered = true;
+		} else if(register.getSender() == 1) {
+			bagCheckRegistered = true;
+		}
 		
-		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_REG, MY_PARENT);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, regLbl, docChkLbl, lineLbl);
-		register.getDocumentCheckActor().tell(register);
+		if(bodyCheckRegistered && bagCheckRegistered) {
+			logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_REG, MY_PARENT);
+			logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, regLbl, docChkLbl, lineLbl);
+			docCheckActor.tell(new Register(lineNumber));
+		}
+	}
+	
+	private void messageReceived(Initialize initialize) {		
+		if(childrenAreRegistered()) {
+			logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, MY_CHLDRN);
+			return;
+		}
+		logger.debug(Consts.DEBUG_MSG_INIT_MY_CHILD, MY_CHLDRN);
+		bagCheckActor = initialize.getBagCheckActor(lineNumber);
+		bodyCheckActor = initialize.getBodyCheckActor(lineNumber);
+		docCheckActor = initialize.getDocumentCheckActor();
 	}
 	
 	private void messageReceived(BodyCheckRequestsNext bagCheckNext) {		
@@ -145,6 +181,6 @@ public class LineActor extends UntypedActor {
 	}
 
 	private boolean childrenAreRegistered() {
-		return (bagCheckActor != null) && (bodyCheckActor != null);
+		return (bagCheckRegistered == true) && (bodyCheckRegistered == true);
 	}
 }
