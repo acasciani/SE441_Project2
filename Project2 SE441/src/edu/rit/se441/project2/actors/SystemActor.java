@@ -1,7 +1,7 @@
 package edu.rit.se441.project2.actors;
 
 import edu.rit.se441.project2.messages.EndOfDay;
-import edu.rit.se441.project2.messages.Register;
+import edu.rit.se441.project2.messages.Initialize;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 
@@ -12,16 +12,16 @@ public class SystemActor extends UntypedActor {
 	public void onReceive(Object arg0) throws Exception {
 		
 		//Initialization message
-		if (arg0 instanceof Register){
-			Register reg = (Register)arg0;
+		if (arg0 instanceof Initialize){
+			Initialize init = (Initialize)arg0;
 			
 			//Extract the actor references
-			jail = reg.getJailActor();
-			docCheck = reg.getDocumentCheckActor();
+			jail = init.getJailActor();
+			docCheck = init.getDocumentCheckActor();
 			
 			//Begin the registration process for jail and docCheck
-			jail.tell(reg);
-			docCheck.tell(reg);
+			jail.tell(init);
+			docCheck.tell(init);
 		}
 		
 		//End of day message

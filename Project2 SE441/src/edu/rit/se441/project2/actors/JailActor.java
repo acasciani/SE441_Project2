@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.GoToJail;
-import edu.rit.se441.project2.messages.Register;
+import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.nonactors.Passenger;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -18,16 +18,16 @@ public class JailActor extends UntypedActor {
 	public void onReceive(Object arg0) throws Exception {
 		
 		//initialization message
-		if (arg0 instanceof Register){
-			Register reg = (Register) arg0;
-			numLines = reg.getNumberOfLines();
+		if (arg0 instanceof Initialize){
+			Initialize init = (Initialize) arg0;
+			numLines = init.getNumberOfLines();
 			securityList = new ArrayList<ActorRef>();
 			prisonerList = new ArrayList<Passenger>();
 			
 			//pass message to security and remember the security actors
 			for (int x = 0; x < numLines; x++){
-				securityList.add(x,reg.getSecurityActor(x));
-				reg.getSecurityActor(x).tell(reg);
+				securityList.add(x,init.getSecurityActor(x));
+				init.getSecurityActor(x).tell(init);
 			}
 		}
 		
