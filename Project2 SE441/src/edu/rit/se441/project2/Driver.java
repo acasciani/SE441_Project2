@@ -7,6 +7,8 @@ import java.util.Set;
 
 import akka.actor.ActorRef;
 import akka.actor.Actors;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import edu.rit.se441.project2.actors.BagCheckActor;
 import edu.rit.se441.project2.actors.BodyCheckActor;
 import edu.rit.se441.project2.actors.DocumentCheckActor;
@@ -32,11 +34,36 @@ public class Driver {
 		
 		for(int i=0; i<n; i++) {
 			List<ActorRef> insideLineActors = new ArrayList<ActorRef>();
-			ActorRef lineActor = actorFactory.createActorRef(new LineActor(i));
-			ActorRef bagCheckActor = actorFactory.createActorRef(new BagCheckActor(i));
-			ActorRef bodyCheckActor = actorFactory.createActorRef(new BodyCheckActor(i));
-			ActorRef securityActor = actorFactory.createActorRef(new SecurityActor(i));
+			final int lineNumber = i;
 			
+			ActorRef lineActor = Actors.actorOf(
+					new UntypedActorFactory() {
+			            public UntypedActor create() {
+			                return new LineActor(lineNumber);
+			            }
+			        });
+			
+			ActorRef bagCheckActor = Actors.actorOf(
+					new UntypedActorFactory() {
+			            public UntypedActor create() {
+			                return new BagCheckActor(lineNumber);
+			            }
+			        });
+			
+			ActorRef bodyCheckActor = Actors.actorOf(
+					new UntypedActorFactory() {
+			            public UntypedActor create() {
+			                return new BodyCheckActor(lineNumber);
+			            }
+			        });
+			
+			ActorRef securityActor = Actors.actorOf(
+					new UntypedActorFactory() {
+			            public UntypedActor create() {
+			                return new SecurityActor(lineNumber);
+			            }
+			        });
+						
 			insideLineActors.add(lineActor.start());
 			insideLineActors.add(bagCheckActor.start());
 			insideLineActors.add(bodyCheckActor.start());

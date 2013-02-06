@@ -1,5 +1,7 @@
 package edu.rit.se441.project2.nonactors;
 
+import java.io.PrintStream;
+
 /**
  * Handles all Logging. Must know if we are in sandbox mode or
  * production mode. If in production mode, and the passed in
@@ -20,11 +22,15 @@ public class Logger {
 	}
 	public void debug(String message, Object... args) {
 		if(debugEnabled && !productionMode) {
+			String template = String.format(Consts.LOGGER_DEBUG_ERR_OFF.value(), clazz.getCanonicalName(), message);
+			PrintStream ps = System.out;
+			
 			if(debugAsErr) {
-				System.err.printf(Consts.LOGGER_DEBUG_ERR_ON.value(), clazz.getCanonicalName(), args);
-			} else { 
-				System.out.printf(Consts.LOGGER_DEBUG_ERR_OFF.value(), clazz.getCanonicalName(), args);
+				ps = System.err;
+				template = String.format(Consts.LOGGER_DEBUG_ERR_ON.value(), clazz.getCanonicalName(), message);
 			}
+
+			ps.printf(template, args);
 		}
 	}
 	
