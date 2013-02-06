@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import edu.rit.se441.project2.messages.BagCheckReport;
 import edu.rit.se441.project2.messages.GoToBagCheck;
+import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.messages.Register;
 import edu.rit.se441.project2.nonactors.Baggage;
 import edu.rit.se441.project2.nonactors.Consts;
@@ -48,9 +49,9 @@ public class BagCheckActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		Consts msgReceived = Consts.DEBUG_MSG_RECEIVED;
 		
-		if(message instanceof Register) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_REGISTER, MY_CHLDRN);
-			messageReceived((Register) message);
+		if(message instanceof Initialize) {
+			logger.debug(msgReceived, Consts.NAME_MESSAGES_INIT, MY_CHLDRN);
+			messageReceived((Initialize) message);
 			
 		} else if(message instanceof GoToBagCheck) {
 			logger.debug(msgReceived, Consts.NAME_MESSAGES_GO_TO_BAG_CHECK, Consts.NAME_ACTORS_LINE);
@@ -82,22 +83,26 @@ public class BagCheckActor extends UntypedActor {
 		securityActor.tell(bagCheckReport);
 	}
 	
-	private void messageReceived(Register register) {
+	private void messageReceived(Initialize initialize) {
 		if(childrenAreRegistered()) {
-			logger.error(Consts.DEBUG_MSG_CHLD_ALR_REG, MY_CHLDRN);
+			logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, MY_CHLDRN);
 			return;
 		}
 		
-		Consts registerLbl = Consts.NAME_MESSAGES_REGISTER;
+		Consts initLbl = Consts.NAME_MESSAGES_INIT;
+		Consts regLbl = Consts.NAME_MESSAGES_REGISTER;
 		Consts lineLbl = Consts.NAME_ACTORS_LINE;
 		Consts bagChkLbl = Consts.NAME_ACTORS_BAG_CHECK;
 		
-		logger.debug(Consts.DEBUG_MSG_REG_MY_CHILD, MY_CHLDRN);
-		securityActor = register.getSecurityActor(lineNumber);
+		logger.debug(Consts.DEBUG_MSG_INIT_MY_CHILD, MY_CHLDRN);
+		securityActor = initialize.getSecurityActor(lineNumber);
 		
 		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_REG, MY_PARENT);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, registerLbl, lineLbl, bagChkLbl);
-		register.getLineActor(lineNumber).tell(register);
+		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_INIT, MY_PARENT);
+		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initLbl, lineLbl, bagChkLbl);
+		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, regLbl, lineLbl, bagChkLbl);
+		initialize.getLineActor(lineNumber).tell(initialize);
+		initialize.getLineActor(lineNumber).tell(new Register(1));
 	}
 
 	private boolean childrenAreRegistered() {

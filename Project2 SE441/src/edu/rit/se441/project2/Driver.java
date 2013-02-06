@@ -1,9 +1,7 @@
 package edu.rit.se441.project2;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import akka.actor.ActorRef;
 import akka.actor.Actors;
@@ -16,14 +14,11 @@ import edu.rit.se441.project2.actors.JailActor;
 import edu.rit.se441.project2.actors.LineActor;
 import edu.rit.se441.project2.actors.SecurityActor;
 import edu.rit.se441.project2.actors.SystemActor;
-import edu.rit.se441.project2.messages.Register;
-import edu.rit.se441.project2.messages.StartSystem;
-import edu.rit.se441.project2.nonactors.ProjectActorFactory;
+import edu.rit.se441.project2.messages.Initialize;
 
 public class Driver {
 	
 	public static void main(String[] args) {
-		ProjectActorFactory actorFactory = new ProjectActorFactory();
 		int n = 4;
 		
 		ActorRef systemActor = Actors.actorOf(SystemActor.class);
@@ -72,7 +67,7 @@ public class Driver {
 			lineActors.add(insideLineActors);
 		}
 		
-		Register register = new Register(systemActor.start(), jailActor.start(), documentCheckActor.start(), lineActors);
+		Initialize register = new Initialize(systemActor.start(), jailActor.start(), documentCheckActor.start(), lineActors);
 		
 		systemActor.tell(register);
 	}

@@ -8,7 +8,7 @@ import edu.rit.se441.project2.messages.BagCheckReport;
 import edu.rit.se441.project2.messages.BodyCheckReport;
 import edu.rit.se441.project2.messages.Exit;
 import edu.rit.se441.project2.messages.GoToJail;
-import edu.rit.se441.project2.messages.Register;
+import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.nonactors.Baggage;
 import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Logger;
@@ -58,9 +58,9 @@ public class SecurityActor extends UntypedActor {
 	@Override
 	public void onReceive(Object message) throws Exception {
 		Consts msgReceived = Consts.DEBUG_MSG_RECEIVED;
-		if(message instanceof Register) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_REGISTER, Consts.NAME_ACTORS_JAIL);
-			messageReceived((Register) message);
+		if(message instanceof Initialize) {
+			logger.debug(msgReceived, Consts.NAME_MESSAGES_INIT, Consts.NAME_ACTORS_JAIL);
+			messageReceived((Initialize) message);
 			
 		} else if(message instanceof BagCheckReport) {
 			logger.debug(msgReceived, Consts.NAME_MESSAGES_BAG_CHECK_REPORT, Consts.NAME_ACTORS_BAG_CHECK);
@@ -152,26 +152,26 @@ public class SecurityActor extends UntypedActor {
 		}
 	}
 	
-	private void messageReceived(Register register) {		
+	private void messageReceived(Initialize initalize) {		
 		if(childrenAreRegistered()) {
-			logger.error(Consts.DEBUG_MSG_CHLD_ALR_REG, Consts.NAME_ACTORS_JAIL);
+			logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, Consts.NAME_ACTORS_JAIL);
 			return;
 		}
 		
-		Consts regLbl = Consts.NAME_MESSAGES_REGISTER;
+		Consts initLbl = Consts.NAME_MESSAGES_INIT;
 		Consts bagChkLbl = Consts.NAME_ACTORS_BAG_CHECK;
 		Consts bdyChkLbl = Consts.NAME_ACTORS_BODY_CHECK;
 		Consts securiLbl = Consts.NAME_ACTORS_SECURITY;
 		
-		logger.debug(Consts.DEBUG_MSG_REG_MY_CHILD, Consts.NAME_ACTORS_JAIL);
-		jailActor = register.getJailActor();
-		systemActor = register.getSystemActor();
+		logger.debug(Consts.DEBUG_MSG_INIT_MY_CHILD, Consts.NAME_ACTORS_JAIL);
+		jailActor = initalize.getJailActor();
+		systemActor = initalize.getSystemActor();
 		
-		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_REG, MY_PARENT);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, regLbl, bagChkLbl, securiLbl);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, regLbl, bdyChkLbl, securiLbl);
-		register.getBagCheckActor(lineNumber).tell(register);
-		register.getBodyCheckActor(lineNumber).tell(register);
+		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_INIT, MY_PARENT);
+		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initLbl, bagChkLbl, securiLbl);
+		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initLbl, bdyChkLbl, securiLbl);
+		initalize.getBagCheckActor(lineNumber).tell(initalize);
+		initalize.getBodyCheckActor(lineNumber).tell(initalize);
 	}
 	
 	// Helper methods to do sub routine work
