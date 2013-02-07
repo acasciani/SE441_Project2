@@ -9,6 +9,7 @@ import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.messages.NewPassenger;
 import edu.rit.se441.project2.messages.Register;
+import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Passenger;
 
 public class SystemActor extends UntypedActor {
@@ -72,6 +73,11 @@ public class SystemActor extends UntypedActor {
 			// pass the message on to docCheck
 			sendPassengers();
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return Consts.NAME_ACTORS_SYSTEM.value();
 	}
 
 }

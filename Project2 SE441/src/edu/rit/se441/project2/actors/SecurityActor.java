@@ -221,4 +221,9 @@ public class SecurityActor extends UntypedActor {
 	private boolean childrenAreRegistered() {
 		return (jailActor != null);
 	}
+	
+	@Override
+	public String toString() {
+		return Consts.NAME_ACTORS_SECURITY + " " + lineNumber;
+	}
 }

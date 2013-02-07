@@ -49,7 +49,9 @@ public enum Consts {
 	
 
 	
-	PREFIX_MSG_REC_SUB_ROUT		("|__");
+	PREFIX_MSG_REC_SUB_ROUT		("|__"), 
+	
+	NAME_MESSAGES_NEW_PASSENGER				("NewPassenger");
 	
 	
 	

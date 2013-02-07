@@ -1,5 +1,6 @@
 package edu.rit.se441.project2.messages;
 
+import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Passenger;
 
 public class Exit {
@@ -9,4 +10,8 @@ public class Exit {
 		this.passenger = passenger;
 	}
 
+	@Override
+	public String toString() {
+		return Consts.NAME_MESSAGES_EXIT.value();
+	}
 }

@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import edu.rit.se441.project2.messages.BodyCheckRequestsNext;
-import edu.rit.se441.project2.messages.CanISendYouAPassenger;
 import edu.rit.se441.project2.messages.GoToBagCheck;
 import edu.rit.se441.project2.messages.GoToBodyCheck;
 import edu.rit.se441.project2.messages.GoToLine;
@@ -49,6 +48,7 @@ public class LineActor extends UntypedActor {
 	private boolean bagCheckRegistered = false;
 	private boolean bodyCheckRegistered = false;
 	private ActorRef docCheckActor;
+	private boolean isBodyCheckOccupied = false;
 	
 	public LineActor(final int lineNumber) {
 		logger.debug(Consts.DEBUG_MSG_INSTAT_ACTOR, Consts.NAME_ACTORS_LINE, Consts.NAME_OTHER_OBJECTS_DRIVER);
@@ -61,19 +61,34 @@ public class LineActor extends UntypedActor {
 		Consts msgReceived = Consts.DEBUG_MSG_RECEIVED;
 		
 		if(message instanceof Register) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_REGISTER, MY_CHLDRN);
+			logger.debug(msgReceived, message, MY_CHLDRN);
 			messageReceived((Register) message);
 			
 		} else if(message instanceof Initialize) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_INIT, MY_CHLDRN);
+			if(childrenAreInitialized()) {
+				logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, MY_CHLDRN);
+				return;
+			}
+			
+			logger.debug(msgReceived, message, MY_CHLDRN);
 			messageReceived((Initialize) message);
 			
 		} else if(message instanceof GoToLine) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_GO_TO_LINE, Consts.NAME_ACTORS_DOCUMENT_CHECK);
+			if(!childrenAreInitialized()) {
+				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, MY_CHLDRN);
+				return;
+			}
+			
+			logger.debug(msgReceived, message, Consts.NAME_ACTORS_DOCUMENT_CHECK);
 			messageReceived((GoToLine) message);
 			
 		} else if(message instanceof BodyCheckRequestsNext) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_BODY_CHECK_REQUESTS_NEXT, Consts.NAME_ACTORS_BODY_CHECK);
+			if(!childrenAreInitialized()) {
+				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, MY_CHLDRN);
+				return;
+			}
+			
+			logger.debug(msgReceived, message, Consts.NAME_ACTORS_BODY_CHECK);
 			messageReceived((BodyCheckRequestsNext) message);
 			
 		}
@@ -118,10 +133,6 @@ public class LineActor extends UntypedActor {
 	}
 	
 	private void messageReceived(Initialize initialize) {		
-		if(childrenAreRegistered()) {
-			logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, MY_CHLDRN);
-			return;
-		}
 		logger.debug(Consts.DEBUG_MSG_INIT_MY_CHILD, MY_CHLDRN);
 		bagCheckActor = initialize.getBagCheckActor(lineNumber);
 		bodyCheckActor = initialize.getBodyCheckActor(lineNumber);
@@ -129,58 +140,53 @@ public class LineActor extends UntypedActor {
 	}
 	
 	private void messageReceived(BodyCheckRequestsNext bagCheckNext) {		
-		if(!childrenAreRegistered()) {
-			logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, MY_CHLDRN);
-			return;
-		} else if(queue.isEmpty()) {
+		if(queue.isEmpty()) {
 			logger.debug(Consts.DEBUG_MSG_LINE_NO1_IN_QUEUE);
 			return;
 		}
 		
-		Consts goToBdyChkLbl = Consts.NAME_MESSAGES_GO_TO_BODY_CHECK;
-		Consts bodyChkLbl = Consts.NAME_ACTORS_BODY_CHECK;
-		Consts lineLbl = Consts.NAME_ACTORS_LINE;
-		Consts passengerLbl = Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER;
-		
-		Passenger passenger = queue.poll();
-		GoToBodyCheck goToBodyCheck = new GoToBodyCheck(passenger);
-		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBdyChkLbl, passengerLbl, passenger, bodyChkLbl, lineLbl);
-		bodyCheckActor.tell(goToBodyCheck);
+		isBodyCheckOccupied = false;
+		sendNextPassengerToBodyCheck();
 	}
 	
 	private void messageReceived(GoToLine goToLine) {		
-		if(!childrenAreRegistered()) {
-			logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, MY_CHLDRN);
-			return;
-		}
-		
 		Passenger passenger = goToLine.getPassenger();
-		Consts canISendYouAPassLbl = Consts.NAME_MESSAGES_CAN_I_SEND_YOU_A_PASSENG;
-		Consts goToBagChkLbl = Consts.NAME_MESSAGES_GO_TO_BAG_CHECK;
-		Consts bodyChkLbl = Consts.NAME_ACTORS_BODY_CHECK;
-		Consts bagChkLbl = Consts.NAME_ACTORS_BAG_CHECK;
-		Consts lineLbl = Consts.NAME_ACTORS_LINE;
-		Consts passengerLbl = Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER;
 		Consts baggageLbl = Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE;
 		
 		// Per Reqt 2
 		// d. Passengers can go to the body scanner only when it is ready
 		// e. Passengers place their baggage in the baggage scanner as soon as they enter a queue
 		GoToBagCheck goToBagCheck = new GoToBagCheck(passenger.getBaggage());
-		CanISendYouAPassenger canISendPassenger = new CanISendYouAPassenger(getContext());
 		
-		queue.add(goToLine.getPassenger()); // 2.d.
-		logger.debug(Consts.DEBUG_MSG_ADD_PASS_TO_QUEUE, passenger);
+		logger.debug("Adding passenger to the queue for %s", this);
+		queue.add(passenger); // 2.d.
+		sendNextPassengerToBodyCheck();
 		
 		bagCheckActor.tell(goToBagCheck); // 2.e.
-		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBagChkLbl, baggageLbl, passenger.getBaggage(), bagChkLbl, lineLbl);
-				
-		bodyCheckActor.tell(canISendPassenger); // checks to make sure the body check is not occupied
-		logger.debug(Consts.DEBUG_MSG_ASK_IF_I_CAN_SEND_MESSAGE, bodyChkLbl, lineLbl, passenger, canISendYouAPassLbl);
-		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, canISendYouAPassLbl, passengerLbl, passenger, bodyChkLbl, lineLbl);
+		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBagCheck, baggageLbl, passenger.getBaggage(), bagCheckActor, this);
+	}
+	
+	private void sendNextPassengerToBodyCheck() {
+		if(isBodyCheckOccupied) {
+			logger.debug("Cannot send passenger to body check, it is occupied");
+			
+		} else {			
+			Passenger passengerToSend = queue.poll();
+			Consts passengerLbl = Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER;
+			
+			GoToBodyCheck goToBodyCheck = new GoToBodyCheck(passengerToSend);
+			logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBodyCheck, passengerLbl, passengerToSend, bodyCheckActor, this);
+			bodyCheckActor.tell(goToBodyCheck);
+			
+		}
 	}
 
-	private boolean childrenAreRegistered() {
+	private boolean childrenAreInitialized() {
 		return (bagCheckRegistered == true) && (bodyCheckRegistered == true);
+	}
+	
+	@Override
+	public String toString() {
+		return Consts.NAME_ACTORS_LINE + " " + lineNumber;
 	}
 }

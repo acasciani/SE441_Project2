@@ -1,5 +1,6 @@
 package edu.rit.se441.project2.messages;
 
+import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Passenger;
 
 /**
@@ -23,5 +24,10 @@ public class BodyCheckReport {
 	
 	public Passenger getPassenger() {
 		return passenger;
+	}
+	
+	@Override
+	public String toString() {
+		return Consts.NAME_MESSAGES_BODY_CHECK_REPORT.value();
 	}
 }

@@ -1,6 +1,7 @@
 package edu.rit.se441.project2.messages;
 
 import edu.rit.se441.project2.nonactors.Baggage;
+import edu.rit.se441.project2.nonactors.Consts;
 
 /**
  * BagCheckReport.java
@@ -23,5 +24,10 @@ public class BagCheckReport {
 	
 	public Baggage getbaggage() {
 		return baggage;
+	}
+	
+	@Override
+	public String toString() {
+		return Consts.NAME_MESSAGES_BAG_CHECK_REPORT.value();
 	}
 }

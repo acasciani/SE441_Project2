@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import edu.rit.se441.project2.nonactors.Consts;
+
 import akka.actor.ActorRef;
 
 public class Initialize {
@@ -63,5 +65,10 @@ public class Initialize {
 	
 	public int getNumberOfLines(){
 		return numLines;
+	}
+	
+	@Override
+	public String toString() {
+		return Consts.NAME_MESSAGES_INIT.value();
 	}
 }

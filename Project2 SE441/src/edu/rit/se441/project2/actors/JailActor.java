@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.GoToJail;
 import edu.rit.se441.project2.messages.Initialize;
+import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Passenger;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
@@ -49,6 +50,11 @@ public class JailActor extends UntypedActor {
 			
 			//POSSIBLE TODO: DOES THE JAIL NEED TO INFORM ANYONE ELSE THAT IT IS FINISHED?
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return Consts.NAME_ACTORS_JAIL.value();
 	}
 
 }

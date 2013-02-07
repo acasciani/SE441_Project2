@@ -129,4 +129,9 @@ public class DocumentCheckActor extends UntypedActor {
 		logger.debug(Consts.NAME_MESSAGES_REGISTER, MY_PARENT);
 		system.tell(new Register(0));
 	}
+	
+	@Override
+	public String toString() {
+		return Consts.NAME_ACTORS_DOCUMENT_CHECK.value();
+	}
 }
