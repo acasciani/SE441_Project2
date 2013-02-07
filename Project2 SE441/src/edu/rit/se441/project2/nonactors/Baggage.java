@@ -6,7 +6,14 @@ public class Baggage {
 	
 	public Baggage(final Passenger whoBelongsTo) {
 		// Just for now but should be random.
-		this.passes = false;
+		
+		if(Math.random() < .2) {
+			//fails
+			this.passes = false;
+		} else {
+			this.passes = true;
+		}
+		
 		this.whoBelongsTo = whoBelongsTo;
 	}
 	

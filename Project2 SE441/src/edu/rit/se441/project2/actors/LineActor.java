@@ -152,6 +152,7 @@ public class LineActor extends UntypedActor {
 	private void messageReceived(GoToLine goToLine) {		
 		Passenger passenger = goToLine.getPassenger();
 		Consts baggageLbl = Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE;
+		String bagChkActLbl = Consts.NAME_ACTORS_BAG_CHECK + " " + lineNumber;
 		
 		// Per Reqt 2
 		// d. Passengers can go to the body scanner only when it is ready
@@ -163,7 +164,7 @@ public class LineActor extends UntypedActor {
 		sendNextPassengerToBodyCheck();
 		
 		bagCheckActor.tell(goToBagCheck); // 2.e.
-		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBagCheck, baggageLbl, passenger.getBaggage(), bagCheckActor, this);
+		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBagCheck, baggageLbl, passenger.getBaggage(), bagChkActLbl, this);
 	}
 	
 	private void sendNextPassengerToBodyCheck() {
@@ -173,9 +174,10 @@ public class LineActor extends UntypedActor {
 		} else {			
 			Passenger passengerToSend = queue.poll();
 			Consts passengerLbl = Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER;
+			String bodyChkActLbl = Consts.NAME_ACTORS_BODY_CHECK + " " + lineNumber;
 			
 			GoToBodyCheck goToBodyCheck = new GoToBodyCheck(passengerToSend);
-			logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBodyCheck, passengerLbl, passengerToSend, bodyCheckActor, this);
+			logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBodyCheck, passengerLbl, passengerToSend, bodyChkActLbl, this);
 			bodyCheckActor.tell(goToBodyCheck);
 			
 		}

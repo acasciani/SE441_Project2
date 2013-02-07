@@ -31,8 +31,15 @@ public class SystemActor extends UntypedActor {
 		Stack<String> stack = new Stack<String>();
 		stack.addAll(Arrays.asList(names));
 		
+		int times = 0;
+		
 		while(!stack.isEmpty()) {
+			if(times > 5) {
+				break;
+			}
+			
 			for(int i=0; i<4; i++) {
+				times ++;
 				NewPassenger newPass = new NewPassenger(new Passenger(stack.pop()));
 				docCheck.tell(newPass);
 				if(stack.isEmpty()) {

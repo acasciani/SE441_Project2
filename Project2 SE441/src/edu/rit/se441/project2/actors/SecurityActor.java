@@ -59,15 +59,29 @@ public class SecurityActor extends UntypedActor {
 	public void onReceive(Object message) throws Exception {
 		Consts msgReceived = Consts.DEBUG_MSG_RECEIVED;
 		if(message instanceof Initialize) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_INIT, Consts.NAME_ACTORS_JAIL);
+			if(childrenAreInitialized()) {
+				logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, Consts.NAME_ACTORS_JAIL);
+				return;
+			}
+			logger.debug(msgReceived, message, Consts.NAME_ACTORS_JAIL);
 			messageReceived((Initialize) message);
 			
 		} else if(message instanceof BagCheckReport) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_BAG_CHECK_REPORT, Consts.NAME_ACTORS_BAG_CHECK);
+			if(!childrenAreInitialized()) {
+				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, Consts.NAME_ACTORS_JAIL);
+				return;
+			}
+			
+			logger.debug(msgReceived, message, Consts.NAME_ACTORS_BAG_CHECK);
 			messageReceived((BagCheckReport) message);
 			
 		} else if(message instanceof BodyCheckReport) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_BODY_CHECK_REPORT, Consts.NAME_ACTORS_BODY_CHECK);
+			if(!childrenAreInitialized()) {
+				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, Consts.NAME_ACTORS_JAIL);
+				return;
+			}
+			
+			logger.debug(msgReceived, message, Consts.NAME_ACTORS_BODY_CHECK);
 			messageReceived((BodyCheckReport) message);
 			
 		}
@@ -76,14 +90,8 @@ public class SecurityActor extends UntypedActor {
 
 	// Helper methods to hand off when messages are received
 	private void messageReceived(BagCheckReport bagCheckReport) {
-		if(!childrenAreRegistered()) {
-			logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, Consts.NAME_ACTORS_JAIL);
-			return;
-		}
-
 		Baggage baggage = bagCheckReport.getbaggage();
 		Passenger passenger = baggage.whoDoesThisBaggageBelongTo();
-		Consts securityLbl = Consts.NAME_ACTORS_SECURITY;
 		Consts jailLbl = Consts.NAME_ACTORS_JAIL;
 		Consts sysLbl = Consts.NAME_ACTORS_SYSTEM;
 		
@@ -92,19 +100,20 @@ public class SecurityActor extends UntypedActor {
 			boolean allSet = bagHasArrived(baggage, bagCheckReport.didPass());
 			
 			if(allSet) {
-				logger.debug("%s [%s] and %s [%s] have arrived at %s.", BAGGAGE_LBL, baggage, PASSENGER_LBL, passenger, securityLbl);
-				boolean goToJailAnswer = mapping.get(passenger).get(BAGGAGE_LBL);
+				logger.debug("%s [%s] and %s [%s] have arrived at %s.", BAGGAGE_LBL, baggage, PASSENGER_LBL, passenger, this);
+				boolean goToJailAnswer = mapping.get(passenger).get(BAGGAGE_LBL) && 
+						mapping.get(passenger).get(PASSENGER_LBL);
 				
 				if(goToJailAnswer) {
 					GoToJail goToJail = new GoToJail(passenger);
 					logger.debug("Either %s [%s] or %s [%s] didn't pass. Going to %s.", BAGGAGE_LBL, baggage, PASSENGER_LBL, passenger, jailLbl);
-					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, Consts.NAME_MESSAGES_GO_TO_JAIL, PASSENGER_LBL, passenger, jailLbl, securityLbl);
+					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToJail, PASSENGER_LBL, passenger, jailLbl, this);
 					jailActor.tell(goToJail);
 					
 				} else {
 					Exit exitSystem = new Exit(passenger);
 					logger.debug("Both %s [%s] and %s [%s] passed. Leaving %s.", BAGGAGE_LBL, baggage, PASSENGER_LBL, passenger, sysLbl);
-					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, Consts.NAME_MESSAGES_EXIT, PASSENGER_LBL, passenger, sysLbl, securityLbl);
+					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, exitSystem, PASSENGER_LBL, passenger, sysLbl, this);
 					systemActor.tell(exitSystem);
 					
 				}
@@ -116,35 +125,30 @@ public class SecurityActor extends UntypedActor {
 		}
 	}
 	
-	private void messageReceived(BodyCheckReport bodyCheckReport) {
-		if(!childrenAreRegistered()) {
-			logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, Consts.NAME_ACTORS_JAIL);
-			return;
-		}
-		
+	private void messageReceived(BodyCheckReport bodyCheckReport) {		
 		Passenger passenger = bodyCheckReport.getPassenger();
-		Consts securityLbl = Consts.NAME_ACTORS_SECURITY;
 		Consts jailLbl = Consts.NAME_ACTORS_JAIL;
 		Consts sysLbl = Consts.NAME_ACTORS_SYSTEM;
 		
 		if(!doesPassengerExist(passenger)) {
 			logger.debug("Adding %s [%s] to HashMap.", PASSENGER_LBL, passenger);
-			boolean allSet = passengerHasArrived(passenger);
+			boolean allSet = passengerHasArrived(passenger, passenger.doesPassengerPass());
 			
 			if(allSet) {
 				logger.debug("%s and %s [%s] have arrived at Security.", BAGGAGE_LBL, PASSENGER_LBL, passenger);
-				boolean goToJailAnswer = mapping.get(bodyCheckReport.getPassenger()).get(BAGGAGE_LBL);
+				boolean goToJailAnswer = mapping.get(bodyCheckReport.getPassenger()).get(BAGGAGE_LBL) && 
+						mapping.get(bodyCheckReport.getPassenger()).get(PASSENGER_LBL);
 				
 				if(goToJailAnswer) {
 					GoToJail goToJail = new GoToJail(passenger);
 					logger.debug("Either %s or %s [%s] didn't pass. Going to %s.", BAGGAGE_LBL, PASSENGER_LBL, passenger);
-					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, Consts.NAME_MESSAGES_GO_TO_JAIL, PASSENGER_LBL, passenger, jailLbl, securityLbl);
+					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToJail, PASSENGER_LBL, passenger, jailLbl, this);
 					jailActor.tell(goToJail);
 					
 				} else {
 					Exit exitSystem = new Exit(passenger);
 					logger.debug("Both %s and %s [%s] passed. Leaving %s.", BAGGAGE_LBL, PASSENGER_LBL, passenger, sysLbl);
-					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, Consts.NAME_MESSAGES_EXIT, PASSENGER_LBL, passenger, sysLbl, securityLbl);
+					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, exitSystem, PASSENGER_LBL, passenger, sysLbl, this);
 					systemActor.tell(exitSystem);
 					
 				}
@@ -153,23 +157,16 @@ public class SecurityActor extends UntypedActor {
 	}
 	
 	private void messageReceived(Initialize initalize) {		
-		if(childrenAreRegistered()) {
-			logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, Consts.NAME_ACTORS_JAIL);
-			return;
-		}
-		
-		Consts initLbl = Consts.NAME_MESSAGES_INIT;
 		Consts bagChkLbl = Consts.NAME_ACTORS_BAG_CHECK;
 		Consts bdyChkLbl = Consts.NAME_ACTORS_BODY_CHECK;
-		Consts securiLbl = Consts.NAME_ACTORS_SECURITY;
 		
 		logger.debug(Consts.DEBUG_MSG_INIT_MY_CHILD, Consts.NAME_ACTORS_JAIL);
 		jailActor = initalize.getJailActor();
 		systemActor = initalize.getSystemActor();
 		
 		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_INIT, MY_PARENT);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initLbl, bagChkLbl, securiLbl);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initLbl, bdyChkLbl, securiLbl);
+		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initalize, bagChkLbl, this);
+		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initalize, bdyChkLbl, this);
 		initalize.getBagCheckActor(lineNumber).tell(initalize);
 		initalize.getBodyCheckActor(lineNumber).tell(initalize);
 	}
@@ -191,16 +188,16 @@ public class SecurityActor extends UntypedActor {
 		}
 	}
 	
-	private boolean passengerHasArrived(Passenger passenger) {		
+	private boolean passengerHasArrived(Passenger passenger, Boolean passesSecurity) {		
 		if(!mapping.containsKey(passenger)) {
 			logger.debug("%s [%s] is the first to arrive in the HashMap", PASSENGER_LBL, passenger);
 			mapping.put(passenger, new HashMap<String, Boolean>());
-			mapping.get(passenger).put(PASSENGER_LBL, true);
+			mapping.get(passenger).put(PASSENGER_LBL, passesSecurity);
 			mapping.get(passenger).put(BAGGAGE_LBL, null);
 			return false; // baggage not arrived yet
 		} else {
 			logger.debug("Passenger [%s] and %s are now in the HashMap", PASSENGER_LBL, passenger, BAGGAGE_LBL);
-			mapping.get(passenger).put(PASSENGER_LBL, true);
+			mapping.get(passenger).put(PASSENGER_LBL, passesSecurity);
 			return true; // both arrived
 		}
 	}
@@ -218,7 +215,7 @@ public class SecurityActor extends UntypedActor {
 				mapping.get(passenger).get(BAGGAGE_LBL) != null;
 	}
 
-	private boolean childrenAreRegistered() {
+	private boolean childrenAreInitialized() {
 		return (jailActor != null);
 	}
 	

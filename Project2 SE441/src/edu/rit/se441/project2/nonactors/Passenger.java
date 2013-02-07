@@ -8,7 +8,14 @@ public class Passenger {
 	public Passenger(final String name) {
 		// This should allow many bags in the future.
 		this.baggage = new Baggage(this);
-		this.passes = false; // Sould be random
+		
+		if(Math.random() < .2) {
+			//fails
+			this.passes = false;
+		} else {
+			this.passes = true;
+		}
+		
 		this.name = name;
 	}
 	
