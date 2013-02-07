@@ -108,4 +108,9 @@ public class BagCheckActor extends UntypedActor {
 	private boolean childrenAreRegistered() {
 		return (securityActor != null);
 	}
+	
+	@Override
+	public String toString() {
+		return Consts.NAME_ACTORS_BAG_CHECK + " " + lineNumber;
+	}
 }
