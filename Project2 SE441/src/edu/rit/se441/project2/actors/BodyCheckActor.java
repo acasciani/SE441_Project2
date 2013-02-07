@@ -142,4 +142,8 @@ public class BodyCheckActor extends UntypedActor {
 		return (mySecurity != null);
 	}
 
+	@Override
+	public String toString() {
+		return Consts.NAME_ACTORS_BODY_CHECK + " " + lineNumber;
+	}
 }
