@@ -15,10 +15,9 @@ import akka.actor.UntypedActor;
 
 public class DocumentCheckActor extends UntypedActor {
 	private static final Logger logger = new Logger(LineActor.class);
-	private static final String MY_CHLDRN = Consts.NAME_ACTORS_LINE.value();
-	private static final String MY_PARENT = Consts.NAME_ACTORS_SYSTEM.value();
 	int numLines = 0;
 	int currLine = 0;
+	private boolean acceptMessages = false;
 	ArrayList<ActorRef> lineList = new ArrayList<ActorRef>();
 	boolean[] lineStatus;
 	boolean linesReady = false;
@@ -30,7 +29,7 @@ public class DocumentCheckActor extends UntypedActor {
 
 		// initialization message
 		if (arg0 instanceof Initialize) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_INIT, MY_CHLDRN);
+			logger.debug("DocCheck has received an Initialize method.");
 
 			Initialize init = (Initialize) arg0;
 			numLines = init.getNumberOfLines();
@@ -45,12 +44,22 @@ public class DocumentCheckActor extends UntypedActor {
 
 			// remember the system actor reference
 			system = init.getSystemActor();
+			
+			// start accepting messages
+			acceptMessages = true;
 		}
 
 		// line register message
 		if (arg0 instanceof Register) {
-			//logger.debug(msgReceived, Consts.NAME_MESSAGES_REGISTER, MY_CHLDRN);
-			//the message must be done in the register() method
+			
+			logger.debug("DocCheck has receieved a Register message.");
+			
+			// if this message is premature
+			if (!acceptMessages){
+				logger.debug("DocCheck is not yet accepting messages! Message rejected!");
+				return;
+			}
+						
 			Register reg = (Register) arg0;
 			int sender = reg.getSender();
 			lineStatus[sender] = true;
@@ -72,21 +81,30 @@ public class DocumentCheckActor extends UntypedActor {
 
 		// end of day message
 		if (arg0 instanceof EndOfDay) {
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_END_OF_DAY,
-					MY_CHLDRN);
-
-			// pass the message on to the Lines
-			for (int x = 0; x < numLines; x++) {
-				lineList.get(x).tell(arg0);
+			
+			logger.debug("DocCheck has received an EndOfDay message.");
+			
+			// if this message is premature
+			if (!acceptMessages){
+				logger.debug("DocumentChecker is not yet accepting messages! Message rejected!");
+				return;
 			}
-
-			// erase the lineList and reset numLines to zero.
-			lineList = null;
-			numLines = 0;
+			
+			shutdown();
+			
 		}
 
 		// receive new passenger
 		if (arg0 instanceof NewPassenger) {
+			
+			logger.debug("DocChecker has received a NewPassenger message.");
+			
+			// if this message is premature
+			if (!acceptMessages){
+				logger.debug("DocumentChecker is not yet accepting messages! Message rejected!");
+				return;
+			}
+			
 			// see sendPassenger message
 			NewPassenger msg = (NewPassenger) arg0;
 			Passenger pass = msg.getPassenger();
@@ -96,25 +114,10 @@ public class DocumentCheckActor extends UntypedActor {
 
 	// this method is called when a new passenger must be sent to Line.
 	private void sendPassenger(Passenger pass) {
-		boolean atLeastOneLineOpen = false;
-
-		// make sure at the lines are functioning
-		for (int x = 0; x < numLines; x++) {
-			if (lineStatus[currLine]) {
-				atLeastOneLineOpen = true;
-			}
-		}
-
-		// if not, the passenger fails to send. tell the console.
-		if (!atLeastOneLineOpen) {
-			System.err
-					.println("FAILED TO SEND A PASSENGER TO LINE, AS NO LINES ARE CURRENTLY OPEN!");
-			return;
-		}
 
 		// send the passenger
 		GoToLine msg = new GoToLine(pass);
-		logger.debug(Consts.DEBUG_MSG_ADD_PASS_TO_QUEUE, MY_CHLDRN);
+		logger.debug("DocCheck is sending a GoToLine message to line " + currLine);
 		lineList.get(currLine).tell(msg);
 
 		// iterate to the next line in the group
@@ -126,10 +129,26 @@ public class DocumentCheckActor extends UntypedActor {
 	}
 
 	private void register() {
-		logger.debug(Consts.NAME_MESSAGES_REGISTER, MY_PARENT);
+		logger.debug("DocCheck is sending a Register message to System.");
 		system.tell(new Register(0));
 	}
 	
+	private void shutdown(){
+		
+		// erase the lineList and reset numLines to zero.
+				lineList = null;
+				numLines = 0;
+		
+		// stopAccepting all messages
+		acceptMessages = false;
+				
+		// pass the message on to the Lines
+		for (int x = 0; x < numLines; x++) {
+			logger.debug("DocCheck is sending an EndOfDay message to Line " + x);
+			lineList.get(x).tell(new EndOfDay());
+		}
+		
+	}
 	@Override
 	public String toString() {
 		return Consts.NAME_ACTORS_DOCUMENT_CHECK.value();
