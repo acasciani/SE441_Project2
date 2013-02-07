@@ -14,7 +14,7 @@ import java.io.PrintStream;
 public class Logger {
 	private static final boolean debugEnabled = true;
 	private static final boolean debugAsErr = true;
-	private static final boolean productionMode = false;
+	private static final boolean productionMode = true;
 	private final Class clazz;
 	
 	public Logger(final Class clazz) {

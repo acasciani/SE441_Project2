@@ -9,7 +9,7 @@ class ProjectConsole {
 	private ProjectConsole() { }
 	
 	static void printLine(String line, Object... arguments) {
-		System.out.printf(line, arguments);
+		System.out.printf(line + " %n", arguments);
 	}
 
 }
