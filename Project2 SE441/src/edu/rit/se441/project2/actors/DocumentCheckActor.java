@@ -58,11 +58,14 @@ public class DocumentCheckActor extends UntypedActor {
 			// are all lines ready?
 			for (int x = 0; x < numLines; x++) {
 				if (!lineStatus[x]) {
+					linesReady = false;
 					break;
 				}
 
 				// if so, flip the switch and register with systemActor
 				linesReady = true;
+			}
+			if(linesReady) {
 				register();
 			}
 		}

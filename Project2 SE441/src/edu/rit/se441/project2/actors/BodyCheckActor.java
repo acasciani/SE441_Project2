@@ -42,7 +42,7 @@ public class BodyCheckActor extends UntypedActor {
 			logger.debug(msgReceived, Consts.NAME_MESSAGES_INIT, MY_CHLDRN);
 
 			if (childrenAreRegistered()) {
-				logger.error(Consts.DEBUG_MSG_CHLD_ALR_REG, MY_CHLDRN);
+				logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, MY_CHLDRN);
 				// TODO what should we do here?
 				// returning is fine
 				return;
@@ -53,6 +53,7 @@ public class BodyCheckActor extends UntypedActor {
 			myLine = init.getLineActor(lineNumber);
 
 			logger.debug(Consts.DEBUG_MSG_REG_MY_CHILD, MY_PARENT);
+			logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, Consts.NAME_MESSAGES_INIT, Consts.NAME_ACTORS_LINE, Consts.NAME_ACTORS_BODY_CHECK);
 			myLine.tell(new Register(0));
 		}
 
@@ -128,7 +129,7 @@ public class BodyCheckActor extends UntypedActor {
 			myBodyReport = new BodyCheckReport(p, false);
 		}
 		
-		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, bodyChkRptLbl, securityLbl, bodyChkLbl);
+		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, bodyChkRptLbl, Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER, p, securityLbl, bodyChkLbl);
 		this.mySecurity.tell(myBodyReport);
 		this.isAcceptingPassengers = true;
 
