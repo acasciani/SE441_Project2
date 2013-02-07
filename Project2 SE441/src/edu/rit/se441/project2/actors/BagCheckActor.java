@@ -39,8 +39,6 @@ public class BagCheckActor extends UntypedActor {
 	public BagCheckActor(final int lineNumber) {
 		logger.debug(Consts.DEBUG_MSG_INSTAT_ACTOR, Consts.NAME_ACTORS_BAG_CHECK, Consts.NAME_OTHER_OBJECTS_DRIVER);
 		this.lineNumber = lineNumber;
-		//queue = new ConcurrentLinkedQueue<Baggage>();
-		// TODO check with Prof if we need a queue or if the mailbox concept will work here
 	}
 	
 	// TODO need to add shut down procedure
@@ -50,10 +48,20 @@ public class BagCheckActor extends UntypedActor {
 		Consts msgReceived = Consts.DEBUG_MSG_RECEIVED;
 		
 		if(message instanceof Initialize) {
+			if(childrenAreInitialized()) {
+				logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, MY_CHLDRN);
+				return;
+			}
+			
 			logger.debug(msgReceived, Consts.NAME_MESSAGES_INIT, MY_CHLDRN);
 			messageReceived((Initialize) message);
 			
 		} else if(message instanceof GoToBagCheck) {
+			if(!childrenAreInitialized()) {
+				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, MY_CHLDRN);
+				return;
+			}
+			
 			logger.debug(msgReceived, Consts.NAME_MESSAGES_GO_TO_BAG_CHECK, Consts.NAME_ACTORS_LINE);
 			messageReceived((GoToBagCheck) message);
 			
@@ -63,49 +71,34 @@ public class BagCheckActor extends UntypedActor {
 
 	// Helper methods to hand off when messages are received
 	private void messageReceived(GoToBagCheck goToBagCheck) {		
-		if(!childrenAreRegistered()) {
-			logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, MY_CHLDRN);
-			return;
-		}
-		
-		Consts bagChkRptLbl = Consts.NAME_MESSAGES_BAG_CHECK_REPORT;
 		Consts baggageLbl = Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE;
-		Consts securityLbl = Consts.NAME_ACTORS_SECURITY;
-		Consts bagChkLbl = Consts.NAME_ACTORS_BAG_CHECK;
-
-		//queue.add(goToBagCheck.getBaggage());
-		//Baggage baggage = queue.poll();
+		String securityLbl = Consts.NAME_ACTORS_SECURITY + " " + lineNumber;
 		
 		Baggage baggage = goToBagCheck.getBaggage();
 		BagCheckReport bagCheckReport = new BagCheckReport(baggage, baggage.doesBaggagePass());
 		
-		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, bagChkRptLbl, baggageLbl, baggage, securityLbl, bagChkLbl);
+		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, bagCheckReport, baggageLbl, baggage, securityLbl, this);
 		securityActor.tell(bagCheckReport);
 	}
 	
 	private void messageReceived(Initialize initialize) {
-		if(childrenAreRegistered()) {
-			logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, MY_CHLDRN);
-			return;
-		}
-		
-		Consts initLbl = Consts.NAME_MESSAGES_INIT;
-		Consts regLbl = Consts.NAME_MESSAGES_REGISTER;
 		Consts lineLbl = Consts.NAME_ACTORS_LINE;
-		Consts bagChkLbl = Consts.NAME_ACTORS_BAG_CHECK;
+		
+		Register register = new Register(1);
 		
 		logger.debug(Consts.DEBUG_MSG_INIT_MY_CHILD, MY_CHLDRN);
 		securityActor = initialize.getSecurityActor(lineNumber);
 		
 		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_REG, MY_PARENT);
 		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_INIT, MY_PARENT);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initLbl, lineLbl, bagChkLbl);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, regLbl, lineLbl, bagChkLbl);
+		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, register, lineLbl, this);
+		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initialize, lineLbl, this);
+		
 		initialize.getLineActor(lineNumber).tell(initialize);
-		initialize.getLineActor(lineNumber).tell(new Register(1));
+		initialize.getLineActor(lineNumber).tell(register);
 	}
 
-	private boolean childrenAreRegistered() {
+	private boolean childrenAreInitialized() {
 		return (securityActor != null);
 	}
 	
