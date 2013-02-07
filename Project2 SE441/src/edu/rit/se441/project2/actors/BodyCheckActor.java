@@ -1,10 +1,7 @@
 package edu.rit.se441.project2.actors;
 
-import java.util.Random;
-
 import edu.rit.se441.project2.messages.BodyCheckReport;
 import edu.rit.se441.project2.messages.BodyCheckRequestsNext;
-import edu.rit.se441.project2.messages.CanISendYouAPassenger;
 import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.GoToBodyCheck;
 import edu.rit.se441.project2.messages.Initialize;
@@ -26,8 +23,6 @@ public class BodyCheckActor extends UntypedActor {
 	private final int lineNumber;
 	private ActorRef myLine = null; // set after the init message
 	private ActorRef mySecurity = null; // set after the init message
-	private boolean isAcceptingPassengers = true; // set and reset during the
-													// simulation
 
 	public BodyCheckActor(final int lineNumber) {
 		this.lineNumber = lineNumber;
@@ -71,29 +66,10 @@ public class BodyCheckActor extends UntypedActor {
 			logger.debug(msgReceived, Consts.NAME_MESSAGES_GO_TO_BODY_CHECK,
 					MY_CHLDRN);
 			
-			this.isAcceptingPassengers = false;
-
 			// critical problem area below
 			GoToBodyCheck GoToBodyCheck = (GoToBodyCheck) arg0;
 			performBodyCheck(GoToBodyCheck.getPassenger());
 			// end critical problem area
-		}
-
-		/*
-		 * Message From Line
-		 */
-		if (arg0 instanceof CanISendYouAPassenger) {
-			logger.debug(msgReceived,
-					Consts.NAME_MESSAGES_CAN_I_SEND_YOU_A_PASSENG, MY_CHLDRN);
-			if (this.isAcceptingPassengers) {
-				CanISendYouAPassenger cISYAP = (CanISendYouAPassenger) arg0;
-				ActorRef myLine = cISYAP.getLineActor();
-				
-				logger.debug(Consts.NAME_MESSAGES_BODY_CHECK_REQUESTS_NEXT, MY_PARENT);
-				myLine.tell(new BodyCheckRequestsNext());
-			} else {
-				// swallow the message
-			}
 		}
 
 		if (arg0 instanceof EndOfDay) {
@@ -131,8 +107,9 @@ public class BodyCheckActor extends UntypedActor {
 		
 		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, bodyChkRptLbl, Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER, p, securityLbl, bodyChkLbl);
 		this.mySecurity.tell(myBodyReport);
-		this.isAcceptingPassengers = true;
 
+		this.myLine.tell(new BodyCheckRequestsNext());
+		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, Consts.NAME_MESSAGES_BODY_CHECK_REQUESTS_NEXT,Consts.NAME_ACTORS_LINE,Consts.NAME_ACTORS_BODY_CHECK);
 	}
 
 	/**
