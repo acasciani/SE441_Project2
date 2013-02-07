@@ -19,7 +19,7 @@ import edu.rit.se441.project2.messages.Initialize;
 public class Driver {
 	
 	public static void main(String[] args) {
-		int n = 4;
+		int n = 2;
 		
 		ActorRef systemActor = Actors.actorOf(SystemActor.class);
 		ActorRef jailActor = Actors.actorOf(JailActor.class);
