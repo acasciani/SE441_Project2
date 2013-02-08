@@ -6,7 +6,6 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import edu.rit.se441.project2.messages.BagCheckReport;
 import edu.rit.se441.project2.messages.BodyCheckReport;
-import edu.rit.se441.project2.messages.Exit;
 import edu.rit.se441.project2.messages.GoToJail;
 import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.nonactors.Baggage;
@@ -38,17 +37,16 @@ import edu.rit.se441.project2.nonactors.Passenger;
  */
 public class SecurityActor extends UntypedActor {
 	private static final Logger logger = new Logger(SecurityActor.class);
-	private static final String PASSENGER_LBL = Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER.value();
-	private static final String BAGGAGE_LBL   = Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE.value();
-	private static final String MY_PARENT = Consts.NAME_ACTORS_BAG_CHECK + ", " + Consts.NAME_ACTORS_BODY_CHECK;
 	private final int lineNumber;
 	private final HashMap<Passenger, HashMap<String, Boolean>> mapping;
+	private static final String PASSENGER = Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER.value(); 
+	private static final String BAGGAGE = Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE.value(); 
+
 	private ActorRef jailActor;
-	private ActorRef systemActor;
 	
 	public SecurityActor(final int lineNumber) {
-		logger.debug(Consts.DEBUG_MSG_INSTAT_ACTOR, Consts.NAME_ACTORS_SECURITY, Consts.NAME_OTHER_OBJECTS_DRIVER);
 		this.lineNumber = lineNumber;
+		
 		// allows us to keep track of passengers to baggage
 		// this implementation only supports one bag!
 		// But could theoretically support many with some modification
@@ -57,162 +55,190 @@ public class SecurityActor extends UntypedActor {
 	
 	@Override
 	public void onReceive(Object message) throws Exception {
-		Consts msgReceived = Consts.DEBUG_MSG_RECEIVED;
+		
+		// initialization message
 		if(message instanceof Initialize) {
+			
+			logger.debug("Security " + lineNumber + " has received an Initialize message.");
+			
 			if(childrenAreInitialized()) {
-				logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, Consts.NAME_ACTORS_JAIL);
+				logger.error("Security " + lineNumber + " is already initialized! Rejecting message!");
 				return;
 			}
-			logger.debug(msgReceived, message, Consts.NAME_ACTORS_JAIL);
+		
 			messageReceived((Initialize) message);
 			
+		// completed bag check message
 		} else if(message instanceof BagCheckReport) {
+			
+			logger.debug("Security " + lineNumber + " has received a BagCheckReport message.");
+			
 			if(!childrenAreInitialized()) {
-				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, Consts.NAME_ACTORS_JAIL);
+				logger.error("Security " + lineNumber + " is not yet accepting messages! Rejecting message!");
 				return;
 			}
 			
-			logger.debug(msgReceived, message, Consts.NAME_ACTORS_BAG_CHECK);
 			messageReceived((BagCheckReport) message);
 			
+		// completed body check message
 		} else if(message instanceof BodyCheckReport) {
+
+			logger.debug("Security " + lineNumber + " has received a BodyCheckReport message.");
+			
 			if(!childrenAreInitialized()) {
-				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, Consts.NAME_ACTORS_JAIL);
+				logger.error("Security " + lineNumber + " is not yet accepting messages! Rejecting message!");
 				return;
 			}
 			
-			logger.debug(msgReceived, message, Consts.NAME_ACTORS_BODY_CHECK);
 			messageReceived((BodyCheckReport) message);
-			
 		}
 	}
 	
 
-	// Helper methods to hand off when messages are received
+	/**
+	 * This method is called when a BagCheckReport message is received.
+	 * 
+	 * @param bagCheckReport - the message
+	 */
 	private void messageReceived(BagCheckReport bagCheckReport) {
 		Baggage baggage = bagCheckReport.getbaggage();
 		Passenger passenger = baggage.whoDoesThisBaggageBelongTo();
-		Consts jailLbl = Consts.NAME_ACTORS_JAIL;
-		Consts sysLbl = Consts.NAME_ACTORS_SYSTEM;
 		
 		if(!doesBaggageExist(baggage)) {
-			logger.debug("Adding %s [%s] to HashMap.", BAGGAGE_LBL, baggage);
-			boolean allSet = bagHasArrived(baggage, bagCheckReport.didPass());
+			logger.debug("Security " + lineNumber + ": Adding " + baggage.toString() + " to hashMap.");
 			
-			if(allSet) {
-				logger.debug("%s [%s] and %s [%s] have arrived at %s.", BAGGAGE_LBL, baggage, PASSENGER_LBL, passenger, this);
-				boolean goToJailAnswer = mapping.get(passenger).get(BAGGAGE_LBL) && 
-						mapping.get(passenger).get(PASSENGER_LBL);
+			if(bagHasArrived(baggage, bagCheckReport.didPass())) {
+				boolean goToJailAnswer = mapping.get(passenger).get(BAGGAGE) && 
+						mapping.get(passenger).get(PASSENGER);
 				
 				if(goToJailAnswer) {
 					GoToJail goToJail = new GoToJail(passenger);
-					logger.debug("Either %s [%s] or %s [%s] didn't pass. Going to %s.", BAGGAGE_LBL, baggage, PASSENGER_LBL, passenger, jailLbl);
-					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToJail, PASSENGER_LBL, passenger, jailLbl, this);
+					logger.debug("Security " + lineNumber + ": " + passenger.toString() + "'s bag or body check has failed.");
+					logger.debug("Security " + lineNumber + " has sent a GoToJail message.");
 					jailActor.tell(goToJail);
 					
 				} else {
-					Exit exitSystem = new Exit(passenger);
-					logger.debug("Both %s [%s] and %s [%s] passed. Leaving %s.", BAGGAGE_LBL, baggage, PASSENGER_LBL, passenger, sysLbl);
-					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, exitSystem, PASSENGER_LBL, passenger, sysLbl, this);
-					systemActor.tell(exitSystem);
-					
+					logger.debug("Security " + lineNumber + ": " + passenger.toString() + "'s bag and body check have passed.");
+					logger.debug("Security " + lineNumber + ": " + passenger.toString() + " has left the system.");
+
+					//TODO does this work?
+					mapping.remove(passenger);
 				}
 			} else {
-				logger.debug("%s [%s] has been added to the HashMap but %s [%s] has not (arrived) yet.", BAGGAGE_LBL, baggage, PASSENGER_LBL, passenger);
+				logger.debug("Security " + lineNumber + ": " + baggage.toString() + "'s results have arrived. They have been added to the hashmap." );
 			}
+			
+		// this should never happen and would be very bad
 		} else {
-			logger.debug("%s [%s] was already in HashMap.", BAGGAGE_LBL, baggage);
+			logger.debug("Security " + lineNumber + ": " + baggage.toString() + "'s results were already in the db! Rejecting these results!");
 		}
 	}
 	
+	/**
+	 * This method is called when a BodyCheckReport is received.
+	 * 
+	 * @param bodyCheckReport - the message
+	 */
 	private void messageReceived(BodyCheckReport bodyCheckReport) {		
 		Passenger passenger = bodyCheckReport.getPassenger();
-		Consts jailLbl = Consts.NAME_ACTORS_JAIL;
-		Consts sysLbl = Consts.NAME_ACTORS_SYSTEM;
 		
 		if(!doesPassengerExist(passenger)) {
-			logger.debug("Adding %s [%s] to HashMap.", PASSENGER_LBL, passenger);
-			boolean allSet = passengerHasArrived(passenger, passenger.doesPassengerPass());
+			logger.debug("Security " + lineNumber + ": Adding " + passenger.toString() + " to hashMap.");
 			
-			if(allSet) {
-				logger.debug("%s and %s [%s] have arrived at Security.", BAGGAGE_LBL, PASSENGER_LBL, passenger);
-				boolean goToJailAnswer = mapping.get(bodyCheckReport.getPassenger()).get(BAGGAGE_LBL) && 
-						mapping.get(bodyCheckReport.getPassenger()).get(PASSENGER_LBL);
+			
+			if(passengerHasArrived(passenger, passenger.doesPassengerPass())) {
+				boolean goToJailAnswer = mapping.get(bodyCheckReport.getPassenger()).get(BAGGAGE) && 
+						mapping.get(bodyCheckReport.getPassenger()).get(PASSENGER);
 				
 				if(goToJailAnswer) {
 					GoToJail goToJail = new GoToJail(passenger);
-					logger.debug("Either %s or %s [%s] didn't pass. Going to %s.", BAGGAGE_LBL, PASSENGER_LBL, passenger);
-					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToJail, PASSENGER_LBL, passenger, jailLbl, this);
+					logger.debug("Security " + lineNumber + ": " + passenger.toString() + "'s bag or body check has failed.");
+					logger.debug("Security " + lineNumber + " has sent a GoToJail message.");
 					jailActor.tell(goToJail);
 					
 				} else {
-					Exit exitSystem = new Exit(passenger);
-					logger.debug("Both %s and %s [%s] passed. Leaving %s.", BAGGAGE_LBL, PASSENGER_LBL, passenger, sysLbl);
-					logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, exitSystem, PASSENGER_LBL, passenger, sysLbl, this);
-					systemActor.tell(exitSystem);
+					logger.debug("Security " + lineNumber + ": " + passenger.toString() + "'s bag and body check have passed.");
+					logger.debug("Security " + lineNumber + ": " + passenger.toString() + " has left the system.");
 					
+					//TODO does this work?
+					mapping.remove(passenger);
 				}
 			}
+		// this should never happen and would be very bad
+		} else {
+			logger.debug("Security " + lineNumber + ": " + passenger.toString() + "'s results were already in the db! Rejecting these results!");
 		}
 	}
 	
-	private void messageReceived(Initialize initalize) {		
-		Consts bagChkLbl = Consts.NAME_ACTORS_BAG_CHECK;
-		Consts bdyChkLbl = Consts.NAME_ACTORS_BODY_CHECK;
+	/**
+	 * This method is called when an initialize message is received.
+	 * 
+	 * @param initalize
+	 */
+	private void messageReceived(Initialize initalize) {	
 		
-		logger.debug(Consts.DEBUG_MSG_INIT_MY_CHILD, Consts.NAME_ACTORS_JAIL);
 		jailActor = initalize.getJailActor();
-		systemActor = initalize.getSystemActor();
 		
-		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_INIT, MY_PARENT);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initalize, bagChkLbl, this);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initalize, bdyChkLbl, this);
+		logger.debug("Security " + lineNumber + " has sent an initialize message to bag and body check!");
 		initalize.getBagCheckActor(lineNumber).tell(initalize);
 		initalize.getBodyCheckActor(lineNumber).tell(initalize);
 	}
 	
-	// Helper methods to do sub routine work
+	/**
+	 * This method is called when a bag check result is received via a 
+	 * BagCheckReport message.
+	 * 
+	 * @param baggage - the baggage item
+	 * @param passesSecurity - a boolean representing the outcome of the test
+	 * 
+	 * @return a boolean representing whether or not the passenger has also 
+	 * 		arrived.
+	 */
 	private boolean bagHasArrived(Baggage baggage, Boolean passesSecurity) {
 		Passenger passenger = baggage.whoDoesThisBaggageBelongTo();
 		
 		if(!mapping.containsKey(passenger)) {
-			logger.debug("%s [%s] is the first to arrive in the HashMap", BAGGAGE_LBL, baggage);
 			mapping.put(passenger, new HashMap<String, Boolean>());
-			mapping.get(passenger).put(PASSENGER_LBL, null);
-			mapping.get(passenger).put(BAGGAGE_LBL, passesSecurity);
+			mapping.get(passenger).put(PASSENGER, null);
+			mapping.get(passenger).put(BAGGAGE, passesSecurity);
 			return false; // passenger not arrived yet
 		} else {
-			logger.debug("%s [%s] and %s [%s] are now in the HashMap", BAGGAGE_LBL, baggage, PASSENGER_LBL, passenger);
-			mapping.get(passenger).put(BAGGAGE_LBL, passesSecurity);
+			mapping.get(passenger).put(BAGGAGE, passesSecurity);
 			return true; // both arrived
 		}
 	}
 	
+	/**
+	 * This method is called when a body check result is received via a 
+	 * BodyCheckReport message.
+	 * 
+	 * @param passenger - the passenger item
+	 * @param passesSecurity - a boolean representing the outcome of the test
+	 * 
+	 * @return a boolean representing whether or not the baggage test results 
+	 * 		of the passenger has also arrived.
+	 */
 	private boolean passengerHasArrived(Passenger passenger, Boolean passesSecurity) {		
 		if(!mapping.containsKey(passenger)) {
-			logger.debug("%s [%s] is the first to arrive in the HashMap", PASSENGER_LBL, passenger);
 			mapping.put(passenger, new HashMap<String, Boolean>());
-			mapping.get(passenger).put(PASSENGER_LBL, passesSecurity);
-			mapping.get(passenger).put(BAGGAGE_LBL, null);
+			mapping.get(passenger).put(PASSENGER, passesSecurity);
+			mapping.get(passenger).put(BAGGAGE, null);
 			return false; // baggage not arrived yet
 		} else {
-			logger.debug("Passenger [%s] and %s are now in the HashMap", PASSENGER_LBL, passenger, BAGGAGE_LBL);
-			mapping.get(passenger).put(PASSENGER_LBL, passesSecurity);
+			mapping.get(passenger).put(PASSENGER, passesSecurity);
 			return true; // both arrived
 		}
 	}
 	
 	private boolean doesPassengerExist(Passenger passenger) {
-		logger.debug("Checking if %s [%s] is in the HashMap", Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER, passenger);
 		return mapping.containsKey(passenger) && 
-				mapping.get(passenger).get(PASSENGER_LBL) != null;
+				mapping.get(passenger).get(PASSENGER) != null;
 	}
 	
 	private boolean doesBaggageExist(Baggage baggage) {
 		Passenger passenger = baggage.whoDoesThisBaggageBelongTo();
-		logger.debug("Checking if %s [%s] is in the HashMap", Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE, baggage);
 		return mapping.containsKey(passenger) &&
-				mapping.get(passenger).get(BAGGAGE_LBL) != null;
+				mapping.get(passenger).get(BAGGAGE) != null;
 	}
 
 	private boolean childrenAreInitialized() {
