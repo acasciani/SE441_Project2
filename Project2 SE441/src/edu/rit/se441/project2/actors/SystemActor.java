@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Stack;
 
 import akka.actor.ActorRef;
+import akka.actor.Actors;
 import akka.actor.UntypedActor;
 import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.Initialize;
@@ -104,8 +105,8 @@ public class SystemActor extends UntypedActor {
 			jail.stop();
 			docCheck.stop();
 			//TODO LOL THIS IS COMPLETE CRAP HOW DO YOU STOP THIS
-			System.exit(0);
-			
+			//System.exit(0);
+			self().tell(Actors.poisonPill());
 		}
 
 		// Register message
