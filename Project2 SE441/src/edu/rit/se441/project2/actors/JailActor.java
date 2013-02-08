@@ -9,19 +9,18 @@ import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Logger;
 import edu.rit.se441.project2.nonactors.Passenger;
 import akka.actor.ActorRef;
-import akka.actor.PoisonPill;
 import akka.actor.UntypedActor;
 
 public class JailActor extends UntypedActor {
-	int numLines;
-	ArrayList<ActorRef> securityList = null;
-	ArrayList<Passenger> prisonerList = null;
 	private static final Logger logger = new Logger(JailActor.class);
+	private int numLines;
+	private ArrayList<ActorRef> securityList = null;
+	private ArrayList<Passenger> prisonerList = null;
 	private boolean[] lineStatus;
 	private ActorRef system;
 	
 
-	/*
+	/**
 	 * Function processes incoming message types in form of an Object class.
 	 * 
 	 * @param arg0
@@ -96,7 +95,7 @@ public class JailActor extends UntypedActor {
 		}
 	}
 
-	/*
+	/**
 	 * Function returns the class's equivalent CONST from constants.java
 	 */
 	public String toString() {

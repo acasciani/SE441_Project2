@@ -4,11 +4,8 @@ public class Baggage {
 	private final boolean passes;
 	private final Passenger whoBelongsTo;
 	
-	public Baggage(final Passenger whoBelongsTo) {
-		// Just for now but should be random.
-		
+	public Baggage(final Passenger whoBelongsTo) {		
 		if(Math.random() < .2) {
-			//fails
 			this.passes = false;
 		} else {
 			this.passes = true;

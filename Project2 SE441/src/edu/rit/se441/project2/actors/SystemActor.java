@@ -21,9 +21,9 @@ import edu.rit.se441.project2.nonactors.Passenger;
 
 public class SystemActor extends UntypedActor {
 	private static final Logger logger = new Logger(SystemActor.class);
-	ActorRef jail = null;
-	ActorRef docCheck = null;
-	String[] names = { "Randy", "Michael", "Tony", "Jim", "Anthony", "Andre",
+	private ActorRef jail = null;
+	private ActorRef docCheck = null;
+	private String[] names = { "Randy", "Michael", "Tony", "Jim", "Anthony", "Andre",
 			"Steven", "Tyson", "Boomer", "Scott", "Mick", "Nick", "Les",
 			"Will", "Adam", "Conor", "Ian", "Alex", "John", "James", "Tom",
 			"Vick", "Adrian", "Greg", "Cortland", "Fred", "Stevie", "Vince",
@@ -37,6 +37,7 @@ public class SystemActor extends UntypedActor {
 	 * This method creates and sends four passengers to Document Checking at two
 	 * second intervals until there are no passenger names left to go through.
 	 */
+	@Deprecated
 	private void sendPassengers() throws InterruptedException {
 
 		Stack<String> stack = new Stack<String>();
@@ -70,7 +71,7 @@ public class SystemActor extends UntypedActor {
 
 	}
 
-	/*
+	/**
 	 * Function processes incoming message types in form of an Object class.
 	 * 
 	 * @param arg0
@@ -104,8 +105,6 @@ public class SystemActor extends UntypedActor {
 
 			jail.stop();
 			docCheck.stop();
-			//TODO LOL THIS IS COMPLETE CRAP HOW DO YOU STOP THIS
-			//System.exit(0);
 			self().tell(Actors.poisonPill());
 		}
 
@@ -135,9 +134,10 @@ public class SystemActor extends UntypedActor {
 		docCheck.tell(new EndOfDay());
 	}
 
-	/*
+	/**
 	 * Function returns the class's equivalent CONST from constants.java
 	 */
+	@Override
 	public String toString() {
 		return Consts.NAME_ACTORS_SYSTEM.value();
 	}

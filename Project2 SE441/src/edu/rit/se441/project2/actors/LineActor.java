@@ -49,9 +49,9 @@ public class LineActor extends UntypedActor {
 	private final ConcurrentLinkedQueue<Passenger> queue;
 	private ActorRef bagCheckActor;
 	private ActorRef bodyCheckActor;
+	private ActorRef docCheckActor;
 	private boolean bagCheckRegistered = false;
 	private boolean bodyCheckRegistered = false;
-	private ActorRef docCheckActor;
 	private boolean isBodyCheckOccupied = false;
 	private boolean isAcceptingNewPassengers = true;
 	

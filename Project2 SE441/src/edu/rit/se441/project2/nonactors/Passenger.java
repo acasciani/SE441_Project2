@@ -10,7 +10,6 @@ public class Passenger {
 		this.baggage = new Baggage(this);
 		
 		if(Math.random() < .2) {
-			//fails
 			this.passes = false;
 		} else {
 			this.passes = true;

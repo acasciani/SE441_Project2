@@ -15,13 +15,13 @@ import akka.actor.UntypedActor;
 
 public class DocumentCheckActor extends UntypedActor {
 	private static final Logger logger = new Logger(LineActor.class);
-	int numLines = 0;
-	int currLine = 0;
+	private int numLines = 0;
+	private int currLine = 0;
 	private boolean acceptMessages = false;
-	ArrayList<ActorRef> lineList = new ArrayList<ActorRef>();
-	boolean[] lineStatus;
-	boolean linesReady = false;
-	ActorRef system;
+	private ArrayList<ActorRef> lineList = new ArrayList<ActorRef>();
+	private boolean[] lineStatus;
+	private boolean linesReady = false;
+	private ActorRef system;
 
 	@Override
 	public void onReceive(Object arg0) throws Exception {
