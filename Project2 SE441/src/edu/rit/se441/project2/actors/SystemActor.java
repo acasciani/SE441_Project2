@@ -1,3 +1,8 @@
+/**
+ * SystemActor represents the main administrative system in the TSA station.
+ * 
+ * @author Adam Meyer, Conor Craig, Alex Casciani
+ */
 package edu.rit.se441.project2.actors;
 
 import java.util.Arrays;
@@ -10,15 +15,17 @@ import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.messages.NewPassenger;
 import edu.rit.se441.project2.messages.Register;
 import edu.rit.se441.project2.nonactors.Consts;
+import edu.rit.se441.project2.nonactors.Logger;
 import edu.rit.se441.project2.nonactors.Passenger;
 
 public class SystemActor extends UntypedActor {
+	private static final Logger logger = new Logger(SecurityActor.class);
 	ActorRef jail = null;
 	ActorRef docCheck = null;
 
-	/*
-	 * Function creates and sends four passengers to Document Checking at two
-	 * second intervals until there are no passenger naems left to go through.
+	/**
+	 * This method creates and sends four passengers to Document Checking at two
+	 * second intervals until there are no passenger names left to go through.
 	 */
 	private void sendPassengers() throws InterruptedException {
 		String[] names = { "Randy", "Michael", "Tony", "Jim", "Anthony",
@@ -46,7 +53,10 @@ public class SystemActor extends UntypedActor {
 				times++;
 				NewPassenger newPass = new NewPassenger(new Passenger(
 						stack.pop()));
+				
+				logger.debug("System sends a NewPassenger message.");
 				docCheck.tell(newPass);
+				
 				if (stack.isEmpty()) {
 					break;
 				} else {
@@ -68,24 +78,37 @@ public class SystemActor extends UntypedActor {
 
 		// Initialization message
 		if (arg0 instanceof Initialize) {
+			
+			logger.debug("System has received an Initialize message.");
 			Initialize init = (Initialize) arg0;
-
+			
 			// Extract the actor references
 			jail = init.getJailActor();
 			docCheck = init.getDocumentCheckActor();
 
 			// Begin the registration process for jail and docCheck
+			logger.debug("System has sent an initialize method to jail and docCheck.");
+			
 			jail.tell(init);
 			docCheck.tell(init);
 		}
 
 		// End of day message
 		else if (arg0 instanceof EndOfDay) {
+			
+			logger.debug("System has received an EndOfDay message.");
+			
 			// pass the message on to docCheck
+			logger.debug("System has sent an EndOfDay message to docCheck.");
+			
 			docCheck.tell(arg0);
 		}
+		
 		// Register message
 		else if (arg0 instanceof Register) {
+		
+			logger.debug("System has received a Register message.");
+			
 			// pass the message on to docCheck
 			sendPassengers();
 		}

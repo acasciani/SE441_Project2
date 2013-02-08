@@ -47,6 +47,10 @@ public class Logger {
 		}
 	}
 	
+	public void debug(String str){
+		ProjectConsole.printLine(str);
+	}
+	
 	public void error(String message, Object... args) {
 		System.out.printf(Consts.LOGGER_ERROR.value(), clazz.getCanonicalName(), args);
 	}
