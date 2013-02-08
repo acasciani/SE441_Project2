@@ -185,9 +185,10 @@ public class SecurityActor extends UntypedActor {
 		
 		jailActor = initalize.getJailActor();
 		
-		logger.debug("Security " + lineNumber + " has sent an initialize message to bag and body check!");
+		logger.debug("Security " + lineNumber + " has sent an initialize message to line, bag check, and body check!");
 		initalize.getBagCheckActor(lineNumber).tell(initalize);
 		initalize.getBodyCheckActor(lineNumber).tell(initalize);
+		initalize.getLineActor(lineNumber).tell(initalize);
 	}
 	
 	/**

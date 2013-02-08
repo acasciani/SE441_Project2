@@ -33,19 +33,18 @@ public class BodyCheckActor extends UntypedActor {
 		 * reception of initialization message
 		 */
 		if (arg0 instanceof Initialize) {
-			logger.debug("BodyCheck has received an Initialization message.");
+			logger.debug("BodyCheck " + lineNumber + " has received an Initialization message.");
 
 			if (childrenAreRegistered()) {
-				logger.debug("BodyCheck's children are confirmed to be registered.");
+				logger.debug("BodyCheck " + lineNumber +"'s children are confirmed to be registered.");
 				return;
 			}
 
 			Initialize init = (Initialize) arg0;
 			mySecurity = init.getSecurityActor(this.lineNumber);
 			myLine = init.getLineActor(lineNumber);
-			logger.debug("BodyCheck has coupled to its Security.");
-			logger.debug("BodyCheck has coupled to its Line.");
-			logger.debug("BodyCheck sends a Register message to its Line.");
+			
+			logger.debug("BodyCheck " + lineNumber + " sends a Register message to its Line.");
 			myLine.tell(new Register(0));
 		}
 
@@ -53,10 +52,10 @@ public class BodyCheckActor extends UntypedActor {
 		 * Reception of GoToBodyCheck message
 		 */
 		if (arg0 instanceof GoToBodyCheck) {
-			logger.debug("BodyCheck has received a GoToBodyCheck message.");
+			logger.debug("BodyCheck " + lineNumber + " has received a GoToBodyCheck message.");
 
 			if (!childrenAreRegistered()) {
-				logger.error("BodyCheck is confirming that its children are not registered.");
+				logger.error("BodyCheck " + lineNumber + " is confirming that its children are not registered.");
 				return;
 			}
 
@@ -68,7 +67,7 @@ public class BodyCheckActor extends UntypedActor {
 		 * Reception of EndOfDay message
 		 */
 		if (arg0 instanceof EndOfDay) {
-			logger.debug("BodyCheck has received an EndOfDay message.");
+			logger.debug("BodyCheck " + lineNumber + " has received an EndOfDay message.");
 			shutDown();
 		}
 	}
@@ -85,7 +84,7 @@ public class BodyCheckActor extends UntypedActor {
 
 		// send shutdown to children
 		this.mySecurity.tell(new EndOfDay());
-		logger.debug("BodyCheck has sent an EndOfDay message to its Security.");
+		logger.debug("BodyCheck " + lineNumber + " has sent an EndOfDay message to its Security.");
 	}
 
 	/*
@@ -105,9 +104,9 @@ public class BodyCheckActor extends UntypedActor {
 		}
 
 		this.mySecurity.tell(myBodyReport);
-		logger.debug("BodyCheck has sent a BodyReport to its Security.");
+		logger.debug("BodyCheck " + lineNumber + " has sent a BodyReport to its Security.");
 		this.myLine.tell(new BodyCheckRequestsNext());
-		logger.debug("BodyCheck has sent a BodyCheckRequestsNext message to its line.");
+		logger.debug("BodyCheck " + lineNumber + " has sent a BodyCheckRequestsNext message to its line.");
 	}
 
 	/*
