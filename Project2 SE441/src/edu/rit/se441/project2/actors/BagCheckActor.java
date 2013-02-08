@@ -98,7 +98,7 @@ public class BagCheckActor extends UntypedActor {
 		BagCheckReport bagCheckReport = new BagCheckReport(baggage,
 				baggage.doesBaggagePass());
 
-		logger.debug("BagCheck "+ this.lineNumber +" sent a bagCheckReport message to "+ this.securityActor.toString() +".");
+		logger.debug("BagCheck "+ this.lineNumber +" sent a bagCheckReport message to its Security.");
 		securityActor.tell(bagCheckReport);
 
 	}
@@ -110,7 +110,7 @@ public class BagCheckActor extends UntypedActor {
 	private void messageReceived(Initialize initialize) {
 		Register register = new Register(1);
 
-		logger.debug("BagCheck "+ this.lineNumber+" sent an Initialize message to "+ this.securityActor.toString() +".");
+		logger.debug("BagCheck "+ this.lineNumber+" sent an Initialize message to its Security.");
 		securityActor = initialize.getSecurityActor(lineNumber);
 
 		//logger.debug("BagCheck "+ this.lineNumber+" sent an Initialize message to its Line "+ this.lineNumber+ ".");
