@@ -1,3 +1,8 @@
+/**
+ * This actor class represents a single line in a TSA system.
+ * 
+ * @author Adam Meyer, Alex Casciani
+ */
 package edu.rit.se441.project2.actors;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -39,8 +44,6 @@ import edu.rit.se441.project2.nonactors.Passenger;
  */
 public class LineActor extends UntypedActor {
 	private static final Logger logger = new Logger(LineActor.class);
-	private static final String MY_CHLDRN = Consts.NAME_ACTORS_BAG_CHECK + ", " + Consts.NAME_ACTORS_BODY_CHECK;
-	private static final String MY_PARENT = Consts.NAME_ACTORS_DOCUMENT_CHECK.value();
 	private final int lineNumber;
 	private final ConcurrentLinkedQueue<Passenger> queue;
 	private ActorRef bagCheckActor;
@@ -51,74 +54,79 @@ public class LineActor extends UntypedActor {
 	private boolean isBodyCheckOccupied = false;
 	
 	public LineActor(final int lineNumber) {
-		logger.debug(Consts.DEBUG_MSG_INSTAT_ACTOR, Consts.NAME_ACTORS_LINE, Consts.NAME_OTHER_OBJECTS_DRIVER);
 		this.lineNumber = lineNumber;
 		queue = new ConcurrentLinkedQueue<Passenger>();
 	}
 
+	
 	@Override
 	public void onReceive(Object message) throws Exception {
-		Consts msgReceived = Consts.DEBUG_MSG_RECEIVED;
 		
+		// register message
 		if(message instanceof Register) {
-			logger.debug(msgReceived, message, MY_CHLDRN);
+			
+			logger.debug("Line " + lineNumber + " has received a Register message.");
 			messageReceived((Register) message);
 			
+		// initialization message
 		} else if(message instanceof Initialize) {
+			
+			logger.debug("Line " + lineNumber + " has received an Initialize message.");
 			if(childrenAreInitialized()) {
-				logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, MY_CHLDRN);
+				logger.error("Line " + lineNumber + " is already initialized! Rejecting message!");
 				return;
 			}
 			
-			logger.debug(msgReceived, message, MY_CHLDRN);
 			messageReceived((Initialize) message);
 			
+		// new passenger message
 		} else if(message instanceof GoToLine) {
+			
+			logger.debug("Line " + lineNumber + " has received a GoToLine message.");
 			if(!childrenAreInitialized()) {
-				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, MY_CHLDRN);
+				logger.error("Line " + lineNumber + " is not yet accepting messages! Rejecting message!");
 				return;
 			}
 			
-			logger.debug(msgReceived, message, Consts.NAME_ACTORS_DOCUMENT_CHECK);
 			messageReceived((GoToLine) message);
 			
+		// bodyChecker ready message
 		} else if(message instanceof BodyCheckRequestsNext) {
+			
+			logger.debug("Line " + lineNumber + " has received a BodyCheckRequestsNext message.");
+			
 			if(!childrenAreInitialized()) {
-				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, MY_CHLDRN);
+				logger.error("Line " + lineNumber + " is not yet accepting messages! Rejecting message!");
 				return;
 			}
 			
-			logger.debug(msgReceived, message, Consts.NAME_ACTORS_BODY_CHECK);
 			messageReceived((BodyCheckRequestsNext) message);
 			
 		}
 	}	
 	
 	
-	// Helper methods to hand off when messages are received
+	/**
+	 * this method is called when a Register message is received. 
+	 * 
+	 * @param register - the received message
+	 */
 	private void messageReceived(Register register) {
-		// body check= 0; bag check=1
-		Consts[] children = {Consts.NAME_ACTORS_BODY_CHECK, Consts.NAME_ACTORS_BAG_CHECK};
 		
-		if(bagCheckRegistered && bodyCheckRegistered) {
-			logger.error(Consts.DEBUG_MSG_CHLD_ALR_REG, MY_CHLDRN);
-			return;
-		} else if(bagCheckRegistered && register.getSender() == 1) {
-			logger.error(Consts.DEBUG_MSG_CHLD_ALR_REG, children[1]);
+		logger.debug("Line " + lineNumber + " has received a Register message.");
+		// body check= 0; bag check=1
+				
+		if(bagCheckRegistered && register.getSender() == 1) {
+			logger.error("Line " + lineNumber + ": error: bagCheck is already registered! Rejecting message!");
 			return;
 		} else if(bodyCheckRegistered && register.getSender() == 0) {
-			logger.error(Consts.DEBUG_MSG_CHLD_ALR_REG, children[0]);
+			logger.error("Line " + lineNumber + ": error: bodyCheck is already registered! Rejecting message!");
 			return;
 		} else if(register.getSender() != 0 && register.getSender() != 1) {
-			logger.error("The sender{%s} is unknown", register.getSender());
+			logger.error("Line " + lineNumber + ": error: unknown entity attempting to register!");
 			return;
 		}
 		
-		Consts regLbl = Consts.NAME_MESSAGES_REGISTER;
-		Consts docChkLbl = Consts.NAME_ACTORS_DOCUMENT_CHECK;
-		Consts lineLbl = Consts.NAME_ACTORS_LINE;
-		
-		logger.debug(Consts.DEBUG_MSG_REG_MY_CHILD, children[register.getSender()]);
 		if(register.getSender() == 0) {
 			bodyCheckRegistered = true;
 		} else if(register.getSender() == 1) {
@@ -126,63 +134,81 @@ public class LineActor extends UntypedActor {
 		}
 		
 		if(bodyCheckRegistered && bagCheckRegistered) {
-			logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_REG, MY_PARENT);
-			logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, regLbl, docChkLbl, lineLbl);
+			logger.debug("Line " + lineNumber + " is sending a Register message to DocCheck.");
 			docCheckActor.tell(new Register(lineNumber));
 		}
 	}
 	
+	/**
+	 * This method is called when an Initialize message is received.
+	 * 
+	 * @param initialize - the message
+	 */
 	private void messageReceived(Initialize initialize) {		
-		logger.debug(Consts.DEBUG_MSG_INIT_MY_CHILD, MY_CHLDRN);
 		bagCheckActor = initialize.getBagCheckActor(lineNumber);
 		bodyCheckActor = initialize.getBodyCheckActor(lineNumber);
 		docCheckActor = initialize.getDocumentCheckActor();
 	}
 	
+	/**
+	 * This method is called when a BodyCheckRequestsNext message is received.
+	 * 
+	 * @param bagCheckNext - the message
+	 */
 	private void messageReceived(BodyCheckRequestsNext bagCheckNext) {		
-		if(queue.isEmpty()) {
-			logger.debug(Consts.DEBUG_MSG_LINE_NO1_IN_QUEUE);
-			return;
+		if(queue.isEmpty()){
+			isBodyCheckOccupied = false;
+		} else {
+			sendNextPassengerToBodyCheck();
 		}
-		
-		isBodyCheckOccupied = false;
-		sendNextPassengerToBodyCheck();
 	}
 	
+	/**
+	 * This method is called when a GoToLine message is received.
+	 * 
+	 * @param goToLine
+	 */
 	private void messageReceived(GoToLine goToLine) {		
 		Passenger passenger = goToLine.getPassenger();
-		Consts baggageLbl = Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE;
-		String bagChkActLbl = Consts.NAME_ACTORS_BAG_CHECK + " " + lineNumber;
 		
 		// Per Reqt 2
 		// d. Passengers can go to the body scanner only when it is ready
 		// e. Passengers place their baggage in the baggage scanner as soon as they enter a queue
 		GoToBagCheck goToBagCheck = new GoToBagCheck(passenger.getBaggage());
 		
-		logger.debug("Adding passenger to the queue for %s", this);
+		logger.debug("Line " + lineNumber + ": A new passenger has been added to the queue.");
 		queue.add(passenger); // 2.d.
-		sendNextPassengerToBodyCheck();
 		
+		if (!isBodyCheckOccupied){
+			sendNextPassengerToBodyCheck();
+		}
+		
+		logger.debug("Line " + lineNumber + " has sent a goToBagCheck message.");		
 		bagCheckActor.tell(goToBagCheck); // 2.e.
-		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBagCheck, baggageLbl, passenger.getBaggage(), bagChkActLbl, this);
 	}
 	
+	/**
+	 * This method is called to send a passenger to the body check in 
+	 * response to a new passenger added to the queue (if the body check was 
+	 * currently empty) or in response to a bodyCheckRequestsNext message
+	 */
 	private void sendNextPassengerToBodyCheck() {
-		if(isBodyCheckOccupied) {
-			logger.debug("Cannot send passenger to body check, it is occupied");
 			
-		} else {			
-			Passenger passengerToSend = queue.poll();
-			Consts passengerLbl = Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER;
-			String bodyChkActLbl = Consts.NAME_ACTORS_BODY_CHECK + " " + lineNumber;
+		Passenger passengerToSend = queue.poll();
+		GoToBodyCheck goToBodyCheck = new GoToBodyCheck(passengerToSend);
 			
-			GoToBodyCheck goToBodyCheck = new GoToBodyCheck(passengerToSend);
-			logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, goToBodyCheck, passengerLbl, passengerToSend, bodyChkActLbl, this);
-			bodyCheckActor.tell(goToBodyCheck);
+		logger.debug("Line " + lineNumber + " has sent a GoToBodyCheck message.");
+		bodyCheckActor.tell(goToBodyCheck);
 			
-		}
 	}
 
+	/**
+	 * This method is called to check whether or not LineActor has finished 
+	 * it's initialization, including waiting on the bag and body checks' 
+	 * register messages.
+	 * 
+	 * @return true if initialization has finished, else, false.
+	 */
 	private boolean childrenAreInitialized() {
 		return (bagCheckRegistered == true) && (bodyCheckRegistered == true);
 	}
