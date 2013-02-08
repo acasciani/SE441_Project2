@@ -64,6 +64,7 @@ public class SystemActor extends UntypedActor {
 			}
 
 			Thread.sleep(2000L);
+			times = 0;
 		}
 
 	}
@@ -98,9 +99,13 @@ public class SystemActor extends UntypedActor {
 			logger.debug("System has received an EndOfDay message.");
 
 			// pass the message on to docCheck
-			logger.debug("System has sent an EndOfDay message to docCheck.");
+			logger.debug("System has killed all processes");
 
-			docCheck.tell(arg0);
+			jail.stop();
+			docCheck.stop();
+			//TODO LOL THIS IS COMPLETE CRAP HOW DO YOU STOP THIS
+			System.exit(0);
+			
 		}
 
 		// Register message
@@ -109,7 +114,7 @@ public class SystemActor extends UntypedActor {
 			logger.debug("System has received a Register message.");
 
 			// pass the message on to docCheck
-			// sendPassengers();
+			//sendPassengers();
 			sendFewPassengers();
 		}
 	}

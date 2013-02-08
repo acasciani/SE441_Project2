@@ -9,6 +9,7 @@ import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Logger;
 import edu.rit.se441.project2.nonactors.Passenger;
 import akka.actor.ActorRef;
+import akka.actor.PoisonPill;
 import akka.actor.UntypedActor;
 
 public class JailActor extends UntypedActor {
@@ -16,7 +17,9 @@ public class JailActor extends UntypedActor {
 	ArrayList<ActorRef> securityList = null;
 	ArrayList<Passenger> prisonerList = null;
 	private static final Logger logger = new Logger(JailActor.class);
-
+	private boolean[] lineStatus;
+	private ActorRef system;
+	
 
 	/*
 	 * Function processes incoming message types in form of an Object class.
@@ -35,7 +38,9 @@ public class JailActor extends UntypedActor {
 			numLines = init.getNumberOfLines();
 			securityList = new ArrayList<ActorRef>();
 			prisonerList = new ArrayList<Passenger>();
-
+			system = init.getSystemActor();
+			lineStatus = new boolean[numLines];
+			
 			// pass message to security and remember the security actors
 			for (int x = 0; x < numLines; x++) {
 				securityList.add(x, init.getSecurityActor(x));
@@ -59,15 +64,35 @@ public class JailActor extends UntypedActor {
 
 		// end of day message
 		if (arg0 instanceof EndOfDay) {
-
+			
 			logger.debug("Jail received an EndOfDay message.");
 			
-			// empty the prisonerList and the securityList
-			securityList = null;
-			prisonerList = null;
+			EndOfDay msg = (EndOfDay) arg0;
+			int sender = msg.getId();
+			lineStatus[sender] = true;
+			
+			boolean done = true;
+			for (int x = 0; x < numLines; x++){
+				if (!lineStatus[x]){
+					done = false;
+				}
+			}
+			
+			if (done){
+				
+				for (int x = 0; x < numLines; x++){
+					securityList.get(x).stop();
+				}
+				
+				logger.debug("Jail releases the prisoners, since the day is over.");
+				
+				// empty the prisonerList and the securityList
+				securityList = null;
+				prisonerList = null;
 
-			// POSSIBLE TODO: DOES THE JAIL NEED TO INFORM ANYONE ELSE THAT IT
-			// IS FINISHED?
+				logger.debug("Jail sends an EndOfDay message to System.");
+				system.tell(new EndOfDay());
+			}
 		}
 	}
 

@@ -82,7 +82,7 @@ public class BagCheckActor extends UntypedActor {
 		
 		// send shutdown to children
 		logger.debug("BagCheck "+ this.lineNumber+" has sent an EndOfDay message to it's Security.");
-		this.securityActor.tell(new EndOfDay());
+		this.securityActor.tell(new EndOfDay(1));
 
 		// clear all references
 		this.securityActor = null;

@@ -54,6 +54,10 @@ public class Logger {
 	public void error(String message, Object... args) {
 		System.out.printf(Consts.LOGGER_ERROR.value(), clazz.getCanonicalName(), args);
 	}
+	
+	public void error(String str){
+		System.out.println("ERROR: " + str);
+	}
 
 	public void error(Consts constants, Object... args) {
 		error(constants.value(), args);

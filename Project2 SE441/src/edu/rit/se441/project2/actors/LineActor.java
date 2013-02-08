@@ -97,7 +97,7 @@ public class LineActor extends UntypedActor {
 			
 			logger.debug("Line " + lineNumber + " has received a BodyCheckRequestsNext message.");
 			
-			if(!childrenAreInitialized()) {
+			if(!childrenAreInitialized() && isAcceptingNewPassengers) {
 				logger.error("Line " + lineNumber + " is not yet accepting messages! Rejecting message!");
 				return;
 			}
@@ -205,7 +205,7 @@ public class LineActor extends UntypedActor {
 	}
 	
 	private void shutdown(){
-		if (queue.isEmpty()){
+		if (queue.isEmpty() && bagCheckActor != null && bodyCheckActor != null){
 			
 			logger.debug("Line " + lineNumber + " has sent an EndOfDay emssage to bag and body checks.");
 			bagCheckActor.tell(new EndOfDay());

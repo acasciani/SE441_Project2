@@ -81,7 +81,7 @@ public class BodyCheckActor extends UntypedActor {
 
 		// send shutdown to children
 		logger.debug("BodyCheck " + lineNumber + " has sent an EndOfDay message to its Security.");
-		this.mySecurity.tell(new EndOfDay());
+		this.mySecurity.tell(new EndOfDay(0));
 		
 		// clear all references
 		this.mySecurity = null;

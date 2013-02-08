@@ -48,6 +48,10 @@ public class SecurityActor extends UntypedActor {
 	private final HashMap<Passenger, HashMap<String, Boolean>> mapping;
 	private static final String PASSENGER = Consts.NAME_TRANSFERRED_OBJECTS_PASSENGER.value(); 
 	private static final String BAGGAGE = Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE.value(); 
+	private boolean[] childStatus = new boolean[2];
+	private ActorRef bodyCheckActor;
+	private ActorRef bagCheckActor;
+	private ActorRef lineActor;
 
 	private ActorRef jailActor;
 	
@@ -101,6 +105,13 @@ public class SecurityActor extends UntypedActor {
 		
 		// end of day message 
 		} else if(message instanceof EndOfDay){
+			EndOfDay msg = (EndOfDay) message;
+			int sender = msg.getId();
+			childStatus[sender] = true;
+			
+			if (childStatus[0] && childStatus[1]) {
+				shutdown();
+			}
 			
 		}
 	}
@@ -191,9 +202,23 @@ public class SecurityActor extends UntypedActor {
 		jailActor = initalize.getJailActor();
 		
 		logger.debug("Security " + lineNumber + " has sent an initialize message to line, bag check, and body check!");
-		initalize.getBagCheckActor(lineNumber).tell(initalize);
-		initalize.getBodyCheckActor(lineNumber).tell(initalize);
-		initalize.getLineActor(lineNumber).tell(initalize);
+		bagCheckActor = initalize.getBagCheckActor(lineNumber);
+		bagCheckActor.tell(initalize);
+		bodyCheckActor = initalize.getBodyCheckActor(lineNumber);
+		bodyCheckActor.tell(initalize);
+		lineActor = initalize.getLineActor(lineNumber);
+		lineActor.tell(initalize);
+	}
+	
+	private void shutdown(){
+		mapping.clear();
+		
+		bagCheckActor.stop();
+		bodyCheckActor.stop();
+		lineActor.stop();
+		
+		logger.debug("Security " + lineNumber + " sent an EndOfDay message to Jail.");
+		jailActor.tell(new EndOfDay(lineNumber));
 	}
 	
 	/**
