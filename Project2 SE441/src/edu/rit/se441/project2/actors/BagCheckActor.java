@@ -47,9 +47,9 @@ public class BagCheckActor extends UntypedActor {
 		 * reception of initialization message
 		 */
 		if (message instanceof Initialize) {
-			logger.debug("BagCheck has received an Initialization message.");
+			logger.debug("BagCheck "+ this.lineNumber+" has received an Initialization message.");
 			if (childrenAreInitialized()) {
-				logger.error("BagCheck is confirming that its children are initialized.");
+				logger.error("BagCheck "+ this.lineNumber+" is confirming that its children are initialized.");
 				return;
 			}
 
@@ -59,9 +59,9 @@ public class BagCheckActor extends UntypedActor {
 		 * reception of GoToBagCheck message
 		 */
 		} else if (message instanceof GoToBagCheck) {
-			logger.debug("BagCheck has received an GoToBagCheck message.");
+			logger.debug("BagCheck "+ this.lineNumber+" has received a GoToBagCheck message.");
 			if (!childrenAreInitialized()) {
-				logger.error("BagCheck is confirming that its children are not initialized.");
+				logger.error("BagCheck "+ this.lineNumber+" is confirming that its children are not initialized.");
 				return;
 			}
 			messageReceived((GoToBagCheck) message);
@@ -70,7 +70,7 @@ public class BagCheckActor extends UntypedActor {
 		 * Reception of EndOfDay message
 		 */
 		} else if (message instanceof EndOfDay) {
-			logger.debug("BagCheck has received an EndOfDay message.");
+			logger.debug("BagCheck "+ this.lineNumber+" has received an EndOfDay message.");
 			shutDown();
 		}
 	}
@@ -83,7 +83,7 @@ public class BagCheckActor extends UntypedActor {
 		this.securityActor = null;
 		// send shutdown to children
 		this.securityActor.tell(new EndOfDay());
-		logger.debug("BagCheck has sent an EndOfDay message to its Security.");
+		logger.debug("BagCheck "+ this.lineNumber+" has sent an EndOfDay message to "+ this.securityActor.toString() +".");
 	}
 
 	/**
@@ -98,7 +98,7 @@ public class BagCheckActor extends UntypedActor {
 		BagCheckReport bagCheckReport = new BagCheckReport(baggage,
 				baggage.doesBaggagePass());
 
-		logger.debug("BagCheck sent a bagCheckReport message to its Security.");
+		logger.debug("BagCheck "+ this.lineNumber +" sent a bagCheckReport message to "+ this.securityActor.toString() +".");
 		securityActor.tell(bagCheckReport);
 
 	}
@@ -110,13 +110,13 @@ public class BagCheckActor extends UntypedActor {
 	private void messageReceived(Initialize initialize) {
 		Register register = new Register(1);
 
-		logger.debug("BagCheck sent an Initialize message to its Security.");
+		logger.debug("BagCheck "+ this.lineNumber+" sent an Initialize message to "+ this.securityActor.toString() +".");
 		securityActor = initialize.getSecurityActor(lineNumber);
 
-		logger.debug("BagCheck sent an Initialize message to its Line.");
-		logger.debug("BagCheck sent an Register message to its Line.");
+		//logger.debug("BagCheck "+ this.lineNumber+" sent an Initialize message to its Line "+ this.lineNumber+ ".");
+		logger.debug("BagCheck "+ this.lineNumber+" sent a Register message to its Line "+ this.lineNumber+ ".");
 
-		initialize.getLineActor(lineNumber).tell(initialize);
+		//initialize.getLineActor(lineNumber).tell(initialize);
 		initialize.getLineActor(lineNumber).tell(register);
 	}
 
