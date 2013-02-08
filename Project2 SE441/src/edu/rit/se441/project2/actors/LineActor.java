@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import edu.rit.se441.project2.messages.BodyCheckRequestsNext;
+import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.GoToBagCheck;
 import edu.rit.se441.project2.messages.GoToBodyCheck;
 import edu.rit.se441.project2.messages.GoToLine;
@@ -52,6 +53,7 @@ public class LineActor extends UntypedActor {
 	private boolean bodyCheckRegistered = false;
 	private ActorRef docCheckActor;
 	private boolean isBodyCheckOccupied = false;
+	private boolean isAcceptingNewPassengers = true;
 	
 	public LineActor(final int lineNumber) {
 		this.lineNumber = lineNumber;
@@ -102,6 +104,16 @@ public class LineActor extends UntypedActor {
 			
 			messageReceived((BodyCheckRequestsNext) message);
 			
+		} else if(message instanceof EndOfDay){
+			
+			logger.debug("Line " + lineNumber + " has received an EndOfDay message.");
+			
+			if(!childrenAreInitialized()) {
+				logger.error("Line " + lineNumber + " is not yet accepting messages! Rejecting message!");
+				return;
+			}
+			
+			shutdown();
 		}
 	}	
 	
@@ -148,6 +160,7 @@ public class LineActor extends UntypedActor {
 		bagCheckActor = initialize.getBagCheckActor(lineNumber);
 		bodyCheckActor = initialize.getBodyCheckActor(lineNumber);
 		docCheckActor = initialize.getDocumentCheckActor();
+		isAcceptingNewPassengers = true;
 	}
 	
 	/**
@@ -160,6 +173,10 @@ public class LineActor extends UntypedActor {
 			isBodyCheckOccupied = false;
 		} else {
 			sendNextPassengerToBodyCheck();
+		}
+		
+		if(!isAcceptingNewPassengers){
+			shutdown();
 		}
 	}
 	
@@ -185,6 +202,23 @@ public class LineActor extends UntypedActor {
 		
 		logger.debug("Line " + lineNumber + " has sent a goToBagCheck message.");		
 		bagCheckActor.tell(goToBagCheck); // 2.e.
+	}
+	
+	private void shutdown(){
+		if (queue.isEmpty()){
+			
+			logger.debug("Line " + lineNumber + " has sent an EndOfDay emssage to bag and body checks.");
+			bagCheckActor.tell(new EndOfDay());
+			bodyCheckActor.tell(new EndOfDay());
+			
+			bagCheckActor = null;
+			bodyCheckActor = null;
+			bagCheckRegistered = false;
+			bodyCheckRegistered = false;
+		}
+		
+		isAcceptingNewPassengers = false;
+		
 	}
 	
 	/**

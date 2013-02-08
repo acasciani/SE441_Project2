@@ -12,6 +12,7 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import edu.rit.se441.project2.messages.BagCheckReport;
 import edu.rit.se441.project2.messages.BodyCheckReport;
+import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.GoToJail;
 import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.nonactors.Baggage;
@@ -97,6 +98,10 @@ public class SecurityActor extends UntypedActor {
 			}
 			
 			messageReceived((BodyCheckReport) message);
+		
+		// end of day message 
+		} else if(message instanceof EndOfDay){
+			
 		}
 	}
 	

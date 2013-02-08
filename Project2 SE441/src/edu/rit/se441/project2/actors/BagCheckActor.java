@@ -79,11 +79,13 @@ public class BagCheckActor extends UntypedActor {
 	 * Function clears internal references and sends an EndOfDay Message to children.
 	 */
 	private void shutDown() {
+		
+		// send shutdown to children
+		logger.debug("BagCheck "+ this.lineNumber+" has sent an EndOfDay message to it's Security.");
+		this.securityActor.tell(new EndOfDay());
+
 		// clear all references
 		this.securityActor = null;
-		// send shutdown to children
-		this.securityActor.tell(new EndOfDay());
-		logger.debug("BagCheck "+ this.lineNumber+" has sent an EndOfDay message to "+ this.securityActor.toString() +".");
 	}
 
 	/**

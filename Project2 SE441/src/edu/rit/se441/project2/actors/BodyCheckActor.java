@@ -78,13 +78,14 @@ public class BodyCheckActor extends UntypedActor {
 	 * its Security.
 	 */
 	private void shutDown() {
+
+		// send shutdown to children
+		logger.debug("BodyCheck " + lineNumber + " has sent an EndOfDay message to its Security.");
+		this.mySecurity.tell(new EndOfDay());
+		
 		// clear all references
 		this.mySecurity = null;
 		this.myLine = null;
-
-		// send shutdown to children
-		this.mySecurity.tell(new EndOfDay());
-		logger.debug("BodyCheck " + lineNumber + " has sent an EndOfDay message to its Security.");
 	}
 
 	/*

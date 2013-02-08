@@ -134,9 +134,7 @@ public class DocumentCheckActor extends UntypedActor {
 	
 	private void shutdown(){
 		
-		// erase the lineList and reset numLines to zero.
-				lineList = null;
-				numLines = 0;
+		
 		
 		// stopAccepting all messages
 		acceptMessages = false;
@@ -146,6 +144,10 @@ public class DocumentCheckActor extends UntypedActor {
 			logger.debug("DocCheck is sending an EndOfDay message to Line " + x);
 			lineList.get(x).tell(new EndOfDay());
 		}
+		
+		// erase the lineList and reset numLines to zero.
+		lineList = null;
+		numLines = 0;
 		
 	}
 	@Override
