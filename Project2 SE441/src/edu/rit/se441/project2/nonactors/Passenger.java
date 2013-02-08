@@ -22,7 +22,7 @@ public class Passenger {
 	public Passenger(final String name, final boolean passes) {
 		// This should allow many bags in the future.
 		this.baggage = new Baggage(this);
-		this.passes = passes; // Sould be random
+		this.passes = passes; // Should be random
 		this.name = name;
 	}
 	
