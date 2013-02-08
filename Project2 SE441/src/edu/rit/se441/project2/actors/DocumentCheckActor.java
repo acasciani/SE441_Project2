@@ -25,7 +25,6 @@ public class DocumentCheckActor extends UntypedActor {
 
 	@Override
 	public void onReceive(Object arg0) throws Exception {
-		Consts msgReceived = Consts.DEBUG_MSG_RECEIVED;
 
 		// initialization message
 		if (arg0 instanceof Initialize) {
