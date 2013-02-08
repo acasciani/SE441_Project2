@@ -3,6 +3,7 @@ package edu.rit.se441.project2.actors;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import edu.rit.se441.project2.messages.BagCheckReport;
+import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.GoToBagCheck;
 import edu.rit.se441.project2.messages.Initialize;
 import edu.rit.se441.project2.messages.Register;
@@ -11,98 +12,124 @@ import edu.rit.se441.project2.nonactors.Consts;
 import edu.rit.se441.project2.nonactors.Logger;
 
 /**
- * One of two of the second entities in the Line sub-system. 
- * The following requirements compose this actor (per REQT.)
+ * One of two of the second entities in the Line sub-system. The following
+ * requirements compose this actor (per REQT.)
  * 
- * BagCheckActor knows the following
- * - Their Line number (4.a.)
- * - SecurityActor (per 1.b.)
- * - Queue of Baggage (implicitly handled through mailbox) (2.e.)
+ * BagCheckActor knows the following - Their Line number (4.a.) - SecurityActor
+ * (per 1.b.) - Queue of Baggage (implicitly handled through mailbox) (2.e.)
  * 
- * BagCheckActor receives:
- * - Register - from Security
- * - GoToBagCheck - from Line
+ * BagCheckActor receives: - Register - from Security - GoToBagCheck - from Line
  * 
- * BagCheckActor sends:
- * - Register - to Line
- * - BagCheckReport - to Security
+ * BagCheckActor sends: - Register - to Line - BagCheckReport - to Security
  * 
  * @author acc1728
  */
 public class BagCheckActor extends UntypedActor {
 	private static final Logger logger = new Logger(BagCheckActor.class);
-	private static final String MY_CHLDRN = Consts.NAME_ACTORS_SECURITY.value();
-	private static final String MY_PARENT = Consts.NAME_ACTORS_LINE.value();
 	private final int lineNumber;
 	private ActorRef securityActor;
-	
+
+	/*
+	 * Class constructor 
+	 */
 	public BagCheckActor(final int lineNumber) {
-		logger.debug(Consts.DEBUG_MSG_INSTAT_ACTOR, Consts.NAME_ACTORS_BAG_CHECK, Consts.NAME_OTHER_OBJECTS_DRIVER);
 		this.lineNumber = lineNumber;
 	}
-	
-	// TODO need to add shut down procedure
-	
-	@Override
+
+	/**
+	 * Function processes incoming message types in form of an Object class.
+	 * 
+	 * @param message
+	 */
 	public void onReceive(Object message) throws Exception {
-		Consts msgReceived = Consts.DEBUG_MSG_RECEIVED;
-		
-		if(message instanceof Initialize) {
-			if(childrenAreInitialized()) {
-				logger.error(Consts.DEBUG_MSG_CHLD_ALR_INIT, MY_CHLDRN);
+
+		/*
+		 * reception of initialization message
+		 */
+		if (message instanceof Initialize) {
+			logger.debug("BagCheck has received an Initialization message.");
+			if (childrenAreInitialized()) {
+				logger.error("BagCheck is confirming that its children are initialized.");
 				return;
 			}
-			
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_INIT, MY_CHLDRN);
+
 			messageReceived((Initialize) message);
-			
-		} else if(message instanceof GoToBagCheck) {
-			if(!childrenAreInitialized()) {
-				logger.error(Consts.ERROR_MSG_CHLD_NOT_REG, MY_CHLDRN);
+
+		/*
+		 * reception of GoToBagCheck message
+		 */
+		} else if (message instanceof GoToBagCheck) {
+			logger.debug("BagCheck has received an GoToBagCheck message.");
+			if (!childrenAreInitialized()) {
+				logger.error("BagCheck is confirming that its children are not initialized.");
 				return;
 			}
-			
-			logger.debug(msgReceived, Consts.NAME_MESSAGES_GO_TO_BAG_CHECK, Consts.NAME_ACTORS_LINE);
 			messageReceived((GoToBagCheck) message);
-			
+
+		/*
+		 * Reception of EndOfDay message
+		 */
+		} else if (message instanceof EndOfDay) {
+			logger.debug("BagCheck has received an EndOfDay message.");
+			shutDown();
 		}
 	}
 	
-
-	// Helper methods to hand off when messages are received
-	private void messageReceived(GoToBagCheck goToBagCheck) {		
-		Consts baggageLbl = Consts.NAME_TRANSFERRED_OBJECTS_BAGGAGE;
-		String securityLbl = Consts.NAME_ACTORS_SECURITY + " " + lineNumber;
-		
-		Baggage baggage = goToBagCheck.getBaggage();
-		BagCheckReport bagCheckReport = new BagCheckReport(baggage, baggage.doesBaggagePass());
-		
-		logger.debug(Consts.DEBUG_MSG_SEND_OBJ_TO_IN_MESS, bagCheckReport, baggageLbl, baggage, securityLbl, this);
-		securityActor.tell(bagCheckReport);
+	/*
+	 * Function clears internal references and sends an EndOfDay Message to children.
+	 */
+	private void shutDown() {
+		// clear all references
+		this.securityActor = null;
+		// send shutdown to children
+		this.securityActor.tell(new EndOfDay());
+		logger.debug("BagCheck has sent an EndOfDay message to its Security.");
 	}
-	
+
+	/**
+	 * Helper methods to hand off when messages are received
+	 */
+	/*
+	 * Function takes a GoToBagCheck message, generates a BagCheckReport, and
+	 * tells Security the BagCheckReport.
+	 */
+	private void messageReceived(GoToBagCheck goToBagCheck) {
+		Baggage baggage = goToBagCheck.getBaggage();
+		BagCheckReport bagCheckReport = new BagCheckReport(baggage,
+				baggage.doesBaggagePass());
+
+		logger.debug("BagCheck sent a bagCheckReport message to its Security.");
+		securityActor.tell(bagCheckReport);
+
+	}
+
+	/*
+	 * Function takes an Initialize message and passes Initialize messages to
+	 * the class's internal references (children).
+	 */
 	private void messageReceived(Initialize initialize) {
-		Consts lineLbl = Consts.NAME_ACTORS_LINE;
-		
 		Register register = new Register(1);
-		
-		logger.debug(Consts.DEBUG_MSG_INIT_MY_CHILD, MY_CHLDRN);
+
+		logger.debug("BagCheck sent an Initialize message to its Security.");
 		securityActor = initialize.getSecurityActor(lineNumber);
-		
-		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_REG, MY_PARENT);
-		logger.debug(Consts.DEBUG_MSG_TELL_PRT_TO_INIT, MY_PARENT);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, register, lineLbl, this);
-		logger.debug(Consts.DEBUG_MSG_SEND_TO_MESSAGE, initialize, lineLbl, this);
-		
+
+		logger.debug("BagCheck sent an Initialize message to its Line.");
+		logger.debug("BagCheck sent an Register message to its Line.");
+
 		initialize.getLineActor(lineNumber).tell(initialize);
 		initialize.getLineActor(lineNumber).tell(register);
 	}
 
+	/*
+	 * Function checks for the registration of its internal references.
+	 */
 	private boolean childrenAreInitialized() {
 		return (securityActor != null);
 	}
-	
-	@Override
+
+	/*
+	 * Function returns the class's equivalent CONST from constants.java
+	 */
 	public String toString() {
 		return Consts.NAME_ACTORS_BAG_CHECK + " " + lineNumber;
 	}

@@ -14,45 +14,52 @@ public class JailActor extends UntypedActor {
 	int numLines;
 	ArrayList<ActorRef> securityList = null;
 	ArrayList<Passenger> prisonerList = null;
-	
-	@Override
+
+	/*
+	 * Function processes incoming message types in form of an Object class.
+	 * 
+	 * @param arg0
+	 */
 	public void onReceive(Object arg0) throws Exception {
-		
-		//initialization message
-		if (arg0 instanceof Initialize){
+
+		// initialization message
+		if (arg0 instanceof Initialize) {
 			Initialize init = (Initialize) arg0;
 			numLines = init.getNumberOfLines();
 			securityList = new ArrayList<ActorRef>();
 			prisonerList = new ArrayList<Passenger>();
-			
-			//pass message to security and remember the security actors
-			for (int x = 0; x < numLines; x++){
-				securityList.add(x,init.getSecurityActor(x));
+
+			// pass message to security and remember the security actors
+			for (int x = 0; x < numLines; x++) {
+				securityList.add(x, init.getSecurityActor(x));
 				init.getSecurityActor(x).tell(init);
 			}
 		}
-		
-		//new prisoner message
-		if (arg0 instanceof GoToJail){
+
+		// new prisoner message
+		if (arg0 instanceof GoToJail) {
 			GoToJail msg = (GoToJail) arg0;
-			
-			//extract the passenger and insert them into the list of prisoners
+
+			// extract the passenger and insert them into the list of prisoners
 			Passenger pass = msg.getPassenger();
 			prisonerList.add(pass);
 		}
-		
-		//end of day message
-		if (arg0 instanceof EndOfDay){
-			
-			//empty the prisonerList and the securityList
+
+		// end of day message
+		if (arg0 instanceof EndOfDay) {
+
+			// empty the prisonerList and the securityList
 			securityList = null;
 			prisonerList = null;
-			
-			//POSSIBLE TODO: DOES THE JAIL NEED TO INFORM ANYONE ELSE THAT IT IS FINISHED?
+
+			// POSSIBLE TODO: DOES THE JAIL NEED TO INFORM ANYONE ELSE THAT IT
+			// IS FINISHED?
 		}
 	}
-	
-	@Override
+
+	/*
+	 * Function returns the class's equivalent CONST from constants.java
+	 */
 	public String toString() {
 		return Consts.NAME_ACTORS_JAIL.value();
 	}
