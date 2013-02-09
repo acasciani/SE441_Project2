@@ -1,6 +1,7 @@
 package edu.rit.se441.project2.actors;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import edu.rit.se441.project2.messages.EndOfDay;
 import edu.rit.se441.project2.messages.GoToLine;
@@ -104,9 +105,22 @@ public class DocumentCheckActor extends UntypedActor {
 				return;
 			}
 			
-			// see sendPassenger message
+			// extract the passenger
 			NewPassenger msg = (NewPassenger) arg0;
 			Passenger pass = msg.getPassenger();
+			
+			// is the passenger rejected? 30% chance of rejection.
+			Random rng = new Random();
+			int value = rng.nextInt(10);
+			
+			// reject if 0, 1, or 2
+			if (value <= 2){
+				logger.debug("DocCheck: Passenger " + pass.toString() + " does not have the right paperwork, and has been turned away.");
+				return;
+			}
+			
+			// send the passenger
+			
 			sendPassenger(pass);
 		}
 	}
