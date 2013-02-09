@@ -21,6 +21,7 @@ import edu.rit.se441.project2.nonactors.Passenger;
 
 public class SystemActor extends UntypedActor {
 	private static final Logger logger = new Logger(SystemActor.class);
+	private final int nPassengers;
 	private ActorRef jail = null;
 	private ActorRef docCheck = null;
 	private String[] names = { "Randy", "Michael", "Tony", "Jim", "Anthony", "Andre",
@@ -33,6 +34,14 @@ public class SystemActor extends UntypedActor {
 			"Liana", "Molly", "Morgan", "Alexa", "Ashley", "Briana", "Alice",
 			"Connie", "Tessa", "Elise", "Lindsay" };
 
+	/**
+	 * Constructor
+	 * takes n passengers
+	 */
+	public SystemActor(final int n) {
+		this.nPassengers = n;
+	}
+	
 	/**
 	 * This method creates and sends four passengers to Document Checking at two
 	 * second intervals until there are no passenger names left to go through.
@@ -121,10 +130,7 @@ public class SystemActor extends UntypedActor {
 
 	private void sendFewPassengers() {
 		int times = 0;
-		for (;;) {
-			if (times == 2) {
-				break;
-			}
+		while(times < nPassengers) {
 			NewPassenger newPass = new NewPassenger(new Passenger(names[times]));
 			logger.debug("System sends a NewPassenger message to DocCheck.");
 			docCheck.tell(newPass);

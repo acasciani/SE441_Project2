@@ -26,21 +26,31 @@ public class Driver {
 		Logger logger = new Logger(Driver.class);
 		
 		int n=2;
-		
-		logger.debug("Usage: java Driver [n]");
+		int nPassengers=2;
+		logger.debug("Usage: java Driver [n, k]");
 		logger.debug("(n = integer number of lines) is optional. Deafult is 2");
+		logger.debug("(k = integer number of passengers) is required if n is given. Deafult is 2");
 		
 		if(args.length >= 1) {
 			try {
 				n = Integer.valueOf(args[0].trim()).intValue();
+				nPassengers = Integer.valueOf(args[1].trim()).intValue();
 			} catch(NumberFormatException e) {
-				logger.debug(String.format("n={%s} is not an integer.", args[0].trim()));
+				logger.debug(String.format("n={%s} or k={%s} is not an integer.", args[0].trim(), args[1].trim()));
 			}
 		}
 		logger.debug(String.format("Using n={%s}", n));
+		logger.debug(String.format("Using k={%s}", nPassengers));
 		logger.debug("");
 		
-		ActorRef systemActor = Actors.actorOf(SystemActor.class);
+		final int numPass = nPassengers;
+		ActorRef systemActor = Actors.actorOf(
+				new UntypedActorFactory() {
+		            public UntypedActor create() {
+		                return new SystemActor(numPass);
+		            }
+		        });
+		
 		ActorRef jailActor = Actors.actorOf(JailActor.class);
 		ActorRef documentCheckActor = Actors.actorOf(DocumentCheckActor.class);
 				
