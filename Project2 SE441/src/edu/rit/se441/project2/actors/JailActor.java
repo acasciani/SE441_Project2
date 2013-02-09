@@ -83,9 +83,14 @@ public class JailActor extends UntypedActor {
 					securityList.get(x).stop();
 				}
 				
-				logger.debug("Jail releases the prisoners, since the day is over.");
+				logger.debug("Jail is moving the prisoners, since the day is over.");
 				
 				// empty the prisonerList and the securityList
+				
+				for (int x = 0; x < prisonerList.size(); x++){
+					logger.debug("Jail has sent " + prisonerList.get(x).toString() + " to a permanent detention center.");
+				}
+				
 				securityList = null;
 				prisonerList = null;
 

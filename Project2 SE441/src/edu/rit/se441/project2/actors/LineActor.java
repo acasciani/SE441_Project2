@@ -200,14 +200,14 @@ public class LineActor extends UntypedActor {
 			sendNextPassengerToBodyCheck();
 		}
 		
-		logger.debug("Line " + lineNumber + " has sent a goToBagCheck message.");		
+		logger.debug("Line " + lineNumber + " has sent a goToBagCheck message to BagCheck.");		
 		bagCheckActor.tell(goToBagCheck); // 2.e.
 	}
 	
 	private void shutdown(){
 		if (queue.isEmpty() && bagCheckActor != null && bodyCheckActor != null){
 			
-			logger.debug("Line " + lineNumber + " has sent an EndOfDay emssage to bag and body checks.");
+			logger.debug("Line " + lineNumber + " has sent an EndOfDay message to bag and body checks.");
 			bagCheckActor.tell(new EndOfDay());
 			bodyCheckActor.tell(new EndOfDay());
 			
@@ -231,7 +231,7 @@ public class LineActor extends UntypedActor {
 		Passenger passengerToSend = queue.poll();
 		GoToBodyCheck goToBodyCheck = new GoToBodyCheck(passengerToSend);
 			
-		logger.debug("Line " + lineNumber + " has sent a GoToBodyCheck message.");
+		logger.debug("Line " + lineNumber + " has sent a GoToBodyCheck message to BodyCheck.");
 		bodyCheckActor.tell(goToBodyCheck);
 			
 	}

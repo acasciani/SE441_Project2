@@ -103,11 +103,10 @@ public class BodyCheckActor extends UntypedActor {
 			// Fails scan
 			myBodyReport = new BodyCheckReport(p, false);
 		}
-
-		this.mySecurity.tell(myBodyReport);
 		logger.debug("BodyCheck " + lineNumber + " has sent a BodyReport to its Security.");
-		this.myLine.tell(new BodyCheckRequestsNext());
+		this.mySecurity.tell(myBodyReport);
 		logger.debug("BodyCheck " + lineNumber + " has sent a BodyCheckRequestsNext message to its line.");
+		this.myLine.tell(new BodyCheckRequestsNext());
 	}
 
 	/*

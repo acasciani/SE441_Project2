@@ -28,7 +28,7 @@ public class DocumentCheckActor extends UntypedActor {
 
 		// initialization message
 		if (arg0 instanceof Initialize) {
-			logger.debug("DocCheck has received an Initialize method.");
+			logger.debug("DocCheck has received an Initialize message.");
 
 			Initialize init = (Initialize) arg0;
 			numLines = init.getNumberOfLines();

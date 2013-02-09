@@ -1,7 +1,7 @@
 /**
  * SystemActor represents the main administrative system in the TSA station.
  * 
- * @author Adam Meyer, Conor Craig, Alex Casciani
+ * @author Adam Meyer, Conor Craig, Alex Casciani, Ian Graves
  */
 package edu.rit.se441.project2.actors;
 
@@ -126,11 +126,11 @@ public class SystemActor extends UntypedActor {
 				break;
 			}
 			NewPassenger newPass = new NewPassenger(new Passenger(names[times]));
-			logger.debug("System sends a NewPassenger message.");
+			logger.debug("System sends a NewPassenger message to DocCheck.");
 			docCheck.tell(newPass);
 			times++;
 		}
-		logger.debug("System sends an EndOfDay message.");
+		logger.debug("System sends an EndOfDay message to DocCheck.");
 		docCheck.tell(new EndOfDay());
 	}
 

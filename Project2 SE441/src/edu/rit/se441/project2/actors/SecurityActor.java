@@ -40,7 +40,7 @@ import edu.rit.se441.project2.nonactors.Passenger;
  * - GoToJail - to Jail
  * - Exit - to System
  * 
- * @author acc1728
+ * @author Alex Casciani, Adam Meyer, Ian Graves, Conor Craig
  */
 public class SecurityActor extends UntypedActor {
 	private static final Logger logger = new Logger(SecurityActor.class);
@@ -135,7 +135,7 @@ public class SecurityActor extends UntypedActor {
 				
 				if(goToJailAnswer) {
 					GoToJail goToJail = new GoToJail(passenger);
-					logger.debug("Security " + lineNumber + ": " + passenger.toString() + "'s bag or body check has failed.");
+					logger.debug("Security " + lineNumber + ": " + passenger.toString() + "'s bag or body check has failed. They are going to jail!");
 					logger.debug("Security " + lineNumber + " has sent a GoToJail message.");
 					jailActor.tell(goToJail);
 					
@@ -174,7 +174,7 @@ public class SecurityActor extends UntypedActor {
 				
 				if(goToJailAnswer) {
 					GoToJail goToJail = new GoToJail(passenger);
-					logger.debug("Security " + lineNumber + ": " + passenger.toString() + "'s bag or body check has failed.");
+					logger.debug("Security " + lineNumber + ": " + passenger.toString() + "'s bag or body check has failed. They are headed to jail!");
 					logger.debug("Security " + lineNumber + " has sent a GoToJail message.");
 					jailActor.tell(goToJail);
 					
