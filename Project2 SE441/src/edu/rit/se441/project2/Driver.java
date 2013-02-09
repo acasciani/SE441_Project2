@@ -15,11 +15,30 @@ import edu.rit.se441.project2.actors.LineActor;
 import edu.rit.se441.project2.actors.SecurityActor;
 import edu.rit.se441.project2.actors.SystemActor;
 import edu.rit.se441.project2.messages.Initialize;
+import edu.rit.se441.project2.nonactors.Logger;
 
+/**
+ * Starts all actors and passages initialize message
+ * @author acc1728, ajm8774, clc1774, img4583
+ */
 public class Driver {
-	
 	public static void main(String[] args) {
-		int n = 2;
+		Logger logger = new Logger(Driver.class);
+		
+		int n=2;
+		
+		logger.debug("Usage: java Driver [n]");
+		logger.debug("(n = integer number of lines) is optional. Deafult is 2");
+		
+		if(args.length >= 1) {
+			try {
+				n = Integer.valueOf(args[0].trim()).intValue();
+			} catch(NumberFormatException e) {
+				logger.debug(String.format("n={%s} is not an integer.", args[0].trim()));
+			}
+		}
+		logger.debug(String.format("Using n={%s}", n));
+		logger.debug("");
 		
 		ActorRef systemActor = Actors.actorOf(SystemActor.class);
 		ActorRef jailActor = Actors.actorOf(JailActor.class);
