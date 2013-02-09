@@ -131,7 +131,7 @@ public class SystemActor extends UntypedActor {
 	private void sendFewPassengers() {
 		int times = 0;
 		while(times < nPassengers) {
-			NewPassenger newPass = new NewPassenger(new Passenger(names[times]));
+			NewPassenger newPass = new NewPassenger(new Passenger(names[times % names.length]));
 			logger.debug("System sends a NewPassenger message to DocCheck.");
 			docCheck.tell(newPass);
 			times++;
